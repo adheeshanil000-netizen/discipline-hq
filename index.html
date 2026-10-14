@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#090c0b">
+
+    <title>Discipline HQ — Trading Discipline Tracker</title>
+
+    <meta
+        name="description"
+        content="A personal trading discipline tracker for preparation, execution, reflection, and long-term consistency."
+    >
+
+    <link rel="stylesheet" href="styles.css">
+
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <div class="app-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+
+            <a class="brand" href="#dashboard" aria-label="Discipline HQ home">
+                <span class="brand-icon">D</span>
+
+                <span class="brand-copy">
+                    <strong>DISCIPLINE</strong>
+                    <small>TRADING HQ</small>
+                </span>
+            </a>
+
+            <div class="sidebar-label">WORKSPACE</div>
+
+            <nav class="main-navigation" aria-label="Main navigation">
+
+                <button class="nav-item active"
+                        data-view="dashboard"
+                        type="button">
+                    <span class="nav-icon">◫</span>
+                    <span>Overview</span>
+                </button>
+
+                <button class="nav-item"
+                        data-view="daily"
+                        type="button">
+                    <span class="nav-icon">◎</span>
+                    <span>Daily session</span>
+                </button>
+
+                <button class="nav-item"
+                        data-view="history"
+                        type="button">
+                    <span class="nav-icon">▦</span>
+                    <span>History</span>
+                </button>
+
+                <button class="nav-item"
+                        data-view="analytics"
+                        type="button">
+                    <span class="nav-icon">⌁</span>
+                    <span>Analytics</span>
+                </button>
+
+                <button class="nav-item"
+                        data-view="reflections"
+                        type="button">
+                    <span class="nav-icon">✎</span>
+                    <span>Reflections</span>
+                </button>
+
+            </nav>
+
+            <div class="sidebar-label sidebar-label-spaced">
+                PERSONALIZE
+            </div>
+
+            <nav class="main-navigation" aria-label="Personalization">
+
+                <button class="nav-item"
+                        data-view="checklists"
+                        type="button">
+                    <span class="nav-icon">☷</span>
+                    <span>Checklist editor</span>
+                </button>
+
+                <button class="nav-item"
+                        data-view="settings"
+                        type="button">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </button>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+
+                <div class="sidebar-status">
+                    <span class="status-indicator"></span>
+
+                    <div>
+                        <strong>Personal workspace</strong>
+                        <small>Discipline over outcomes</small>
+                    </div>
+                </div>
+
+                <div class="sidebar-version">
+                    DISCIPLINE HQ <span>•</span> V1
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN WORKSPACE -->
+        <main class="main-content">
+
+            <!-- TOP BAR -->
+            <header class="topbar">
+
+                <div class="topbar-left">
+
+                    <button
+                        class="mobile-menu-button"
+                        id="mobile-menu-button"
+                        type="button"
+                        aria-label="Toggle navigation"
+                        aria-expanded="false">
+                        ☰
+                    </button>
+
+                    <div class="breadcrumb">
+                        <span>Workspace</span>
+                        <span class="breadcrumb-divider">/</span>
+                        <strong id="breadcrumb-current">Overview</strong>
+                    </div>
+
+                </div>
+
+                <div class="topbar-right">
+
+                    <div class="current-date">
+                        <span class="date-dot"></span>
+                        <span id="current-date">Loading date...</span>
+                    </div>
+
+                    <button
+                        class="icon-button"
+                        id="open-settings-button"
+                        type="button"
+                        aria-label="Open settings"
+                        title="Settings">
+                        ⚙
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- DASHBOARD VIEW -->
+            <section class="page-view active-view"
+                     id="view-dashboard"
+                     aria-labelledby="dashboard-title">
+
+                <div class="welcome-section">
+
+                    <div class="welcome-copy">
+
+                        <div class="eyebrow">
+                            YOUR PERSONAL PERFORMANCE SYSTEM
+                        </div>
+
+                        <h1 id="dashboard-title">
+                            Build discipline.<br>
+                            <span>Trade with intention.</span>
+                        </h1>
+
+                        <p>
+                            Your edge begins before the entry.
+                            Track your process, understand your habits,
+                            and improve one session at a time.
+                        </p>
+
+                    </div>
+
+                    <button
+                        class="primary-button"
+                        id="start-session-button"
+                        type="button">
+
+                        <span>＋</span>
+                        Start today's session
+
+                    </button>
+
+                </div>
+
+
+                <!-- DATE AND PERIOD SELECTOR -->
+                <div class="dashboard-toolbar">
+
+                    <div class="section-heading">
+                        <h2>Your discipline</h2>
+                        <p>Measure your process, not your profit.</p>
+                    </div>
+
+                    <div class="period-selector"
+                         role="group"
+                         aria-label="Analytics period">
+
+                        <button class="period-button active"
+                                data-period="daily"
+                                type="button">
+                            Day
+                        </button>
+
+                        <button class="period-button"
+                                data-period="weekly"
+                                type="button">
+                            Week
+                        </button>
+
+                        <button class="period-button"
+                                data-period="monthly"
+                                type="button">
+                            Month
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- METRIC CARDS -->
+                <section class="metrics-grid"
+                         aria-label="Discipline metrics">
+
+                    <article class="metric-card score-card">
+
+                        <div class="metric-topline">
+                            <span class="metric-label">
+                                DISCIPLINE SCORE
+                            </span>
+
+                            <span class="metric-icon">◎</span>
+                        </div>
+
+                        <div class="score-card-content">
+
+                            <div class="score-ring"
+                                 id="score-ring"
+                                 role="img"
+                                 aria-label="Discipline score not yet calculated">
+
+                                <div class="score-ring-inner">
+
+                                    <strong id="discipline-score">—</strong>
+                                    <span>%</span>
+
+                                </div>
+
+                            </div>
+
+                            <div class="score-description">
+                                <strong id="score-status">
+                                    Ready when you are
+                                </strong>
+
+                                <p id="score-description">
+                                    Complete your session to establish
+                                    your first score.
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div class="metric-footer">
+                            <span id="score-period-label">
+                                TODAY'S SCORE
+                            </span>
+
+                            <span class="metric-neutral">
+                                Process first
+                            </span>
+                        </div>
+
+                    </article>
+
+
+                    <article class="metric-card">
+
+                        <div class="metric-topline">
+                            <span class="metric-label">
+                                WEEKLY AVERAGE
+                            </span>
+
+                            <span class="metric-icon">↗</span>
+                        </div>
+
+                        <div class="metric-number"
+                             id="weekly-average">—%</div>
+
+                        <p class="metric-description">
+                            Average discipline across recorded days.
+                        </p>
+
+                        <div class="metric-footer">
+                            <span>THIS WEEK</span>
+                            <span id="weekly-days">0 sessions</span>
+                        </div>
+
+                    </article>
+
+
+                    <article class="metric-card">
+
+                        <div class="metric-topline">
+                            <span class="metric-label">
+                                MONTHLY AVERAGE
+                            </span>
+
+                            <span class="metric-icon">◷</span>
+                        </div>
+
+                        <div class="metric-number"
+                             id="monthly-average">—%</div>
+
+                        <p class="metric-description">
+                            Your consistency throughout the month.
+                        </p>
+
+                        <div class="metric-footer">
+                            <span>THIS MONTH</span>
+                            <span id="monthly-days">0 sessions</span>
+                        </div>
+
+                    </article>
+
+
+                    <article class="metric-card">
+
+                        <div class="metric-topline">
+                            <span class="metric-label">
+                                RULE COMPLIANCE
+                            </span>
+
+                            <span class="metric-icon">✓</span>
+                        </div>
+
+                        <div class="metric-number"
+                             id="compliance-status">—</div>
+
+                        <p class="metric-description">
+                            Based on your recorded compliance reviews.
+                        </p>
+
+                        <div class="metric-footer">
+                            <span>REVIEW STATUS</span>
+                            <span id="violation-count">Not reviewed</span>
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- MAIN DASHBOARD GRID -->
+                <section class="dashboard-grid">
+
+
+                    <!-- DISCIPLINE TREND -->
+                    <article class="panel trend-panel">
+
+                        <div class="panel-heading">
+
+                            <div>
+                                <div class="eyebrow">CONSISTENCY</div>
+                                <h2>Discipline over time</h2>
+                                <p>
+                                    Follow your progress across sessions.
+                                </p>
+                            </div>
+
+                            <button
+                                class="text-button"
+                                data-view="analytics"
+                                type="button">
+                                View analytics →
+                            </button>
+
+                        </div>
+
+                        <div class="chart-legend">
+                            <span class="legend-dot"></span>
+                            <span>Discipline score</span>
+                        </div>
+
+                        <div class="chart-container"
+                             id="discipline-chart-container">
+
+                            <div class="chart-placeholder"
+                                 id="discipline-chart-placeholder">
+
+                                <div class="chart-placeholder-icon">⌁</div>
+
+                                <strong>Your progress starts here</strong>
+
+                                <p>
+                                    Complete and save a daily session
+                                    to begin building your chart.
+                                </p>
+
+                            </div>
+
+                            <svg
+                                id="discipline-chart"
+                                class="discipline-chart"
+                                viewBox="0 0 700 240"
+                                preserveAspectRatio="none"
+                                role="img"
+                                aria-label="Historical discipline score chart">
+
+                                <g id="chart-grid-lines"></g>
+
+                                <path
+                                    id="chart-area"
+                                    class="chart-area"
+                                    d="">
+                                </path>
+
+                                <path
+                                    id="chart-line"
+                                    class="chart-line"
+                                    d="">
+                                </path>
+
+                                <g id="chart-points"></g>
+
+                            </svg>
+
+                        </div>
+
+                        <div class="chart-axis"
+                             id="chart-axis"></div>
+
+                    </article>
+
+
+                    <!-- TODAY'S CHECKLIST PROGRESS -->
+                    <article class="panel session-progress-panel">
+
+                        <div class="panel-heading">
+
+                            <div>
+                                <div class="eyebrow">DAILY WORKFLOW</div>
+                                <h2>Today's session</h2>
+                            </div>
+
+                            <span class="live-badge">
+                                <span></span>
+                                DAILY
+                            </span>
+
+                        </div>
+
+                        <p class="panel-description">
+                            Three stages. One consistent process.
+                        </p>
+
+
+                        <div class="stage-progress-list">
+
+                            <button
+                                class="stage-progress-item"
+                                data-stage="premarket"
+                                type="button">
+
+                                <span class="stage-icon">◉</span>
+
+                                <span class="stage-progress-copy">
+                                    <strong>Pre-market</strong>
+                                    <small id="premarket-progress">
+                                        0 of 0 completed
+                                    </small>
+                                </span>
+
+                                <span
+                                    class="stage-percentage"
+                                    id="premarket-percentage">—</span>
+
+                                <span class="stage-arrow">→</span>
+
+                            </button>
+
+
+                            <button
+                                class="stage-progress-item"
+                                data-stage="intramarket"
+                                type="button">
+
+                                <span class="stage-icon">⌁</span>
+
+                                <span class="stage-progress-copy">
+                                    <strong>Intra-market</strong>
+                                    <small id="intramarket-progress">
+                                        0 of 0 completed
+                                    </small>
+                                </span>
+
+                                <span
+                                    class="stage-percentage"
+                                    id="intramarket-percentage">—</span>
+
+                                <span class="stage-arrow">→</span>
+
+                            </button>
+
+
+                            <button
+                                class="stage-progress-item"
+                                data-stage="postmarket"
+                                type="button">
+
+                                <span class="stage-icon">✎</span>
+
+                                <span class="stage-progress-copy">
+                                    <strong>Post-market</strong>
+                                    <small id="postmarket-progress">
+                                        0 of 0 completed
+                                    </small>
+                                </span>
+
+                                <span
+                                    class="stage-percentage"
+                                    id="postmarket-percentage">—</span>
+
+                                <span class="stage-arrow">→</span>
+
+                            </button>
+
+                        </div>
+
+
+                        <div class="session-progress-footer">
+
+                            <div>
+                                <span class="footer-label">
+                                    SESSION STATUS
+                                </span>
+
+                                <strong id="session-status">
+                                    Not started
+                                </strong>
+                            </div>
+
+                            <button
+                                class="secondary-button"
+                                id="continue-session-button"
+                                type="button">
+                                Open session →
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- DISCIPLINE CALENDAR -->
+                    <article class="panel calendar-panel">
+
+                        <div class="panel-heading">
+
+                            <div>
+                                <div class="eyebrow">YOUR HISTORY</div>
+                                <h2 id="calendar-heading">
+                                    Discipline calendar
+                                </h2>
+                            </div>
+
+                            <div class="calendar-navigation">
+
+                                <button
+                                    class="icon-button"
+                                    id="calendar-previous"
+                                    type="button"
+                                    aria-label="Previous month">
+                                    ‹
+                                </button>
+
+                                <button
+                                    class="icon-button"
+                                    id="calendar-next"
+                                    type="button"
+                                    aria-label="Next month">
+                                    ›
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                        <div class="calendar-weekdays">
+                            <span>MON</span>
+                            <span>TUE</span>
+                            <span>WED</span>
+                            <span>THU</span>
+                            <span>FRI</span>
+                            <span>SAT</span>
+                            <span>SUN</span>
+                        </div>
+
+                        <div
+                            class="calendar-grid"
+                            id="calendar-grid"
+                            aria-label="Select a date">
+                        </div>
+
+                        <div class="calendar-legend">
+                            <span>
+                                <i class="legend-square score-high"></i>
+                                Strong
+                            </span>
+
+                            <span>
+                                <i class="legend-square score-medium"></i>
+                                Developing
+                            </span>
+
+                            <span>
+                                <i class="legend-square score-low"></i>
+                                Needs attention
+                            </span>
+                        </div>
+
+                    </article>
+
+
+                    <!-- REFLECTION -->
+                    <article class="panel reflection-panel">
+
+                        <div class="panel-heading">
+
+                            <div>
+                                <div class="eyebrow">MENTAL PERFORMANCE</div>
+                                <h2>Session reflection</h2>
+                            </div>
+
+                            <span class="reflection-icon">✳</span>
+
+                        </div>
+
+                        <p>
+                            Improvement begins with honest observation.
+                        </p>
+
+                        <label for="dashboard-reflection">
+                            Today's key lesson
+                        </label>
+
+                        <textarea
+                            id="dashboard-reflection"
+                            rows="3"
+                            placeholder="What did today's session teach you?">
+                        </textarea>
+
+                        <div class="reflection-footer">
+
+                            <span
+                                id="reflection-save-status"
+                                aria-live="polite">
+                                Not saved
+                            </span>
+
+                            <button
+                                class="secondary-button"
+                                id="save-reflection-button"
+                                type="button">
+                                Save reflection
+                            </button>
+
+                        </div>
+
+                    </article>
+
+                </section>
+
+
+                <!-- DAILY PRINCIPLE -->
+                <section class="principle-banner">
+
+                    <div class="principle-mark">“</div>
+
+                    <div>
+                        <div class="eyebrow">THE DISCIPLINE PRINCIPLE</div>
+
+                        <p>
+                            You cannot control the outcome of every trade.
+                            You can control the quality of every decision.
+                        </p>
+                    </div>
+
+                    <span class="principle-decoration"
+                          aria-hidden="true">D</span>
+
+                </section>
+
+            </section>
+
+
+            <!-- DAILY SESSION VIEW -->
+            <section class="page-view"
+                     id="view-daily"
+                     aria-labelledby="daily-title">
+
+                <div class="page-intro">
+
+                    <div>
+                        <div class="eyebrow">YOUR DAILY PROCESS</div>
+                        <h1 id="daily-title">Daily session</h1>
+
+                        <p>
+                            Prepare with intention. Execute with discipline.
+                            Finish with reflection.
+                        </p>
+                    </div>
+
+                    <div class="session-date-control">
+
+                        <label for="session-date">
+                            Session date
+                        </label>
+
+                        <input
+                            id="session-date"
+                            type="date">
+
+                    </div>
+
+                </div>
+
+
+                <div class="session-summary panel">
+
+                    <div>
+                        <span class="metric-label">
+                            DAILY COMPLETION
+                        </span>
+
+                        <strong id="daily-session-score">—%</strong>
+
+                        <p id="daily-session-summary">
+                            Your score will appear as you complete
+                            applicable checklist items.
+                        </p>
+                    </div>
+
+                    <div class="session-summary-progress">
+                        <div class="progress-track">
+                            <div
+                                id="daily-progress-bar"
+                                class="progress-fill">
+                            </div>
+                        </div>
+
+                        <span id="daily-progress-copy">
+                            0 of 0 applicable items completed
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div class="stage-tabs"
+                     role="group"
+                     aria-label="Session stage">
+
+                    <button
+                        class="stage-tab active"
+                        data-stage="premarket"
+                        type="button">
+                        <span>01</span>
+                        Pre-market
+                    </button>
+
+                    <button
+                        class="stage-tab"
+                        data-stage="intramarket"
+                        type="button">
+                        <span>02</span>
+                        Intra-market
+                    </button>
+
+                    <button
+                        class="stage-tab"
+                        data-stage="postmarket"
+                        type="button">
+                        <span>03</span>
+                        Post-market
+                    </button>
+
+                </div>
+
+
+                <div class="session-stage-content">
+
+                    <section
+                        class="stage-content active-stage"
+                        id="stage-premarket">
+
+                        <div class="panel checklist-panel">
+
+                            <div class="panel-heading">
+
+                                <div>
+                                    <div class="eyebrow">STAGE 01</div>
+                                    <h2>Pre-market preparation</h2>
+
+                                    <p>
+                                        Build your plan before the market
+                                        creates pressure.
+                                    </p>
+                                </div>
+
+                                <span class="stage-large-icon">◉</span>
+
+                            </div>
+
+                            <div
+                                class="checklist-items"
+                                id="premarket-checklist">
+                            </div>
+
+                            <div class="stage-footer">
+
+                                <span id="premarket-stage-summary">
+                                    No items completed yet.
+                                </span>
+
+                                <button
+                                    class="secondary-button"
+                                    data-stage-next="intramarket"
+                                    type="button">
+                                    Continue to execution →
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <section
+                        class="stage-content"
+                        id="stage-intramarket"
+                        hidden>
+
+                        <div class="panel checklist-panel">
+
+                            <div class="panel-heading">
+
+                                <div>
+                                    <div class="eyebrow">STAGE 02</div>
+                                    <h2>Intra-market execution</h2>
+
+                                    <p>
+                                        Follow your predefined rules
+                                        instead of reacting impulsively.
+                                    </p>
+                                </div>
+
+                                <span class="stage-large-icon">⌁</span>
+
+                            </div>
+
+                            <div
+                                class="checklist-items"
+                                id="intramarket-checklist">
+                            </div>
+
+                            <div class="stage-footer">
+
+                                <span id="intramarket-stage-summary">
+                                    No items completed yet.
+                                </span>
+
+                                <button
+                                    class="secondary-button"
+                                    data-stage-next="postmarket"
+                                    type="button">
+                                    Continue to review →
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <section
+                        class="stage-content"
+                        id="stage-postmarket"
+                        hidden>
+
+                        <div class="panel checklist-panel">
+
+                            <div class="panel-heading">
+
+                                <div>
+                                    <div class="eyebrow">STAGE 03</div>
+                                    <h2>Post-market review</h2>
+
+                                    <p>
+                                        Evaluate your decisions honestly,
+                                        regardless of the outcome.
+                                    </p>
+                                </div>
+
+                                <span class="stage-large-icon">✎</span>
+
+                            </div>
+
+                            <div
+                                class="checklist-items"
+                                id="postmarket-checklist">
+                            </div>
+
+                            <div class="stage-footer">
+
+                                <span id="postmarket-stage-summary">
+                                    No items completed yet.
+                                </span>
+
+                                <button
+                                    class="secondary-button"
+                                    data-stage-next="premarket"
+                                    type="button">
+                                    Return to preparation ↺
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+
+                <!-- RULE COMPLIANCE -->
+                <article class="panel compliance-panel">
+
+                    <div class="panel-heading">
+
+                        <div>
+                            <div class="eyebrow">SEPARATE FROM COMPLETION</div>
+                            <h2>Rule compliance review</h2>
+
+                            <p>
+                                Checklist completion does not automatically
+                                mean you followed every trading rule.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <label for="compliance-review">
+                        How did you follow your trading rules today?
+                    </label>
+
+                    <select id="compliance-review">
+
+                        <option value="unreviewed">
+                            Not reviewed yet
+                        </option>
+
+                        <option value="compliant">
+                            No rule violations
+                        </option>
+
+                        <option value="violations">
+                            One or more violations
+                        </option>
+
+                    </select>
+
+                    <label for="violation-notes">
+                        Violation notes (if applicable)
+                    </label>
+
+                    <textarea
+                        id="violation-notes"
+                        rows="3"
+                        placeholder="Describe any rules you broke and what happened.">
+                    </textarea>
+
+                </article>
+
+
+                <!-- SESSION REFLECTION -->
+                <article class="panel full-reflection-panel">
+
+                    <div class="panel-heading">
+
+                        <div>
+                            <div class="eyebrow">CLOSE THE SESSION</div>
+                            <h2>Daily reflection</h2>
+
+                            <p>
+                                Record the lessons you want to carry
+                                into your next session.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <div class="reflection-fields">
+
+                        <div>
+                            <label for="reflection-wins">
+                                What went well?
+                            </label>
+
+                            <textarea
+                                id="reflection-wins"
+                                rows="3"
+                                placeholder="What did you execute correctly?">
+                            </textarea>
+                        </div>
+
+                        <div>
+                            <label for="reflection-mistakes">
+                                What needs improvement?
+                            </label>
+
+                            <textarea
+                                id="reflection-mistakes"
+                                rows="3"
+                                placeholder="What could you have handled better?">
+                            </textarea>
+                        </div>
+
+                        <div>
+                            <label for="reflection-lessons">
+                                Key lesson
+                            </label>
+
+                            <textarea
+                                id="reflection-lessons"
+                                rows="3"
+                                placeholder="What did you learn today?">
+                            </textarea>
+                        </div>
+
+                        <div>
+                            <label for="reflection-tomorrow">
+                                Tomorrow's improvement
+                            </label>
+
+                            <textarea
+                                id="reflection-tomorrow"
+                                rows="3"
+                                placeholder="What is one action you will improve?">
+                            </textarea>
+                        </div>
+
+                    </div>
+
+                    <div class="session-actions">
+
+                        <span id="daily-save-status"
+                              aria-live="polite">
+                            Unsaved changes
+                        </span>
+
+                        <button
+                            class="primary-button"
+                            id="save-daily-session"
+                            type="button">
+                            Save daily session →
+                        </button>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- HISTORY VIEW -->
+            <section class="page-view"
+                     id="view-history"
+                     aria-labelledby="history-title">
+
+                <div class="page-intro">
+
+                    <div>
+                        <div class="eyebrow">YOUR RECORDS</div>
+                        <h1 id="history-title">Discipline history</h1>
+
+                        <p>
+                            Every session matters. Review your past
+                            decisions without rewriting your history.
+                        </p>
+                    </div>
+
+                    <button
+                        class="secondary-button"
+                        id="history-today-button"
+                        type="button">
+                        Today's session
+                    </button>
+
+                </div>
+
+                <article class="panel history-panel">
+
+                    <div class="panel-heading">
+
+                        <div>
+                            <h2>Saved sessions</h2>
+
+                            <p>
+                                Open a date to review its checklist,
+                                score, compliance, and reflections.
+                            </p>
+                        </div>
+
+                        <label class="history-search">
+                            <span class="visually-hidden">
+                                Search saved sessions
+                            </span>
+
+                            <input
+                                id="history-search"
+                                type="search"
+                                placeholder="Search dates or reflections">
+                        </label>
+
+                    </div>
+
+                    <div class="history-table-wrap">
+
+                        <table class="history-table">
+
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Completion</th>
+                                    <th>Pre-market</th>
+                                    <th>Intra-market</th>
+                                    <th>Post-market</th>
+                                    <th>Compliance</th>
+                                    <th>Review</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="history-table-body">
+                                <tr>
+                                    <td colspan="7"
+                                        class="empty-table-message">
+                                        Your saved sessions will appear here.
+                                    </td>
+                                </tr>
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- ANALYTICS VIEW -->
+            <section class="page-view"
+                     id="view-analytics"
+                     aria-labelledby="analytics-title">
+
+                <div class="page-intro">
+
+                    <div>
+                        <div class="eyebrow">MEASURE CONSISTENCY</div>
+                        <h1 id="analytics-title">Analytics</h1>
+
+                        <p>
+                            Find patterns in your discipline and identify
+                            the part of your process that needs attention.
+                        </p>
+                    </div>
+
+                    <label class="analytics-period-select">
+                        Reporting period
+
+                        <select id="analytics-period">
+                            <option value="weekly">This week</option>
+                            <option value="monthly">This month</option>
+                            <option value="90days">Last 90 days</option>
+                            <option value="all">All recorded history</option>
+                        </select>
+                    </label>
+
+                </div>
+
+
+                <section class="analytics-metrics">
+
+                    <article class="panel">
+                        <span class="metric-label">AVERAGE DISCIPLINE</span>
+                        <strong id="analytics-average">—%</strong>
+                        <p>Across eligible recorded sessions.</p>
+                    </article>
+
+                    <article class="panel">
+                        <span class="metric-label">SESSIONS REVIEWED</span>
+                        <strong id="analytics-sessions">0</strong>
+                        <p>Saved sessions in the selected period.</p>
+                    </article>
+
+                    <article class="panel">
+                        <span class="metric-label">BEST SECTION</span>
+                        <strong id="analytics-best-section">—</strong>
+                        <p>Based on applicable checklist completion.</p>
+                    </article>
+
+                </section>
+
+
+                <article class="panel analytics-chart-panel">
+
+                    <div class="panel-heading">
+                        <div>
+                            <div class="eyebrow">LONG-TERM PATTERNS</div>
+                            <h2>Score history</h2>
+                        </div>
+                    </div>
+
+                    <div id="analytics-chart-container">
+                        <p class="empty-state">
+                            Your analytics will become available
+                            after you save sessions.
+                        </p>
+                    </div>
+
+                </article>
+
+
+                <article class="panel section-analysis-panel">
+
+                    <div class="panel-heading">
+                        <div>
+                            <div class="eyebrow">PROCESS BREAKDOWN</div>
+                            <h2>Performance by section</h2>
+                        </div>
+                    </div>
+
+                    <div id="section-analysis">
+                        <p class="empty-state">
+                            Complete applicable checklist items
+                            to see section-level trends.
+                        </p>
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- REFLECTIONS VIEW -->
+            <section class="page-view"
+                     id="view-reflections"
+                     aria-labelledby="reflections-title">
+
+                <div class="page-intro">
+
+                    <div>
+                        <div class="eyebrow">LEARN FROM EXPERIENCE</div>
+                        <h1 id="reflections-title">Reflections</h1>
+
+                        <p>
+                            Your personal record of lessons,
+                            improvements, and recurring challenges.
+                        </p>
+                    </div>
+
+                </div>
+
+                <article class="panel reflection-library">
+
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Reflection library</h2>
+
+                            <p>
+                                Search reflections from your saved sessions.
+                            </p>
+                        </div>
+                    </div>
+
+                    <label for="reflection-search">
+                        Search your reflections
+                    </label>
+
+                    <input
+                        id="reflection-search"
+                        type="search"
+                        placeholder="Search a lesson, mistake, or improvement">
+
+                    <div id="reflection-list">
+                        <p class="empty-state">
+                            Your saved reflections will appear here.
+                        </p>
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- CHECKLIST EDITOR VIEW -->
+            <section class="page-view"
+                     id="view-checklists"
+                     aria-labelledby="checklists-title">
+
+                <div class="page-intro">
+
+                    <div>
+                        <div class="eyebrow">MAKE IT YOUR OWN</div>
+                        <h1 id="checklists-title">Checklist editor</h1>
+
+                        <p>
+                            Shape each stage around your actual
+                            trading process.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <article class="panel checklist-editor-panel">
+
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Your checklist items</h2>
+
+                            <p>
+                                Add, edit, reorder, and organize the
+                                rules you want to follow.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <div class="editor-stage-selector"
+                         role="group"
+                         aria-label="Checklist section">
+
+                        <button
+                            class="editor-stage-button active"
+                            data-editor-stage="premarket"
+                            type="button">
+                            Pre-market
+                        </button>
+
+                        <button
+                            class="editor-stage-button"
+                            data-editor-stage="intramarket"
+                            type="button">
+                            Intra-market
+                        </button>
+
+                        <button
+                            class="editor-stage-button"
+                            data-editor-stage="postmarket"
+                            type="button">
+                            Post-market
+                        </button>
+
+                    </div>
+
+                    <div id="checklist-editor-items"></div>
+
+                    <form id="add-checklist-form">
+
+                        <label for="new-checklist-item">
+                            New checklist item
+                        </label>
+
+                        <div class="add-item-row">
+
+                            <input
+                                id="new-checklist-item"
+                                type="text"
+                                maxlength="200"
+                                placeholder="e.g. Confirmed my planned risk">
+
+                            <button
+                                class="primary-button"
+                                type="submit">
+                                Add item +
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                    <p class="editor-warning">
+                        Changes to your checklist should apply to future
+                        sessions. Historical records must preserve the
+                        checklist version used when they were saved.
+                    </p>
+
+                </article>
+
+            </section>
+
+
+            <!-- SETTINGS VIEW -->
+            <section class="page-view"
+                     id="view-settings"
+                     aria-labelledby="settings-title">
+
+                <div class="page-intro">
+
+                    <div>
+                        <div class="eyebrow">YOUR ENVIRONMENT</div>
+                        <h1 id="settings-title">Settings</h1>
+
+                        <p>
+                            Configure your discipline targets,
+                            appearance, reporting, and data preferences.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <article class="panel settings-panel">
+
+                    <div class="settings-section">
+
+                        <div>
+                            <h2>Discipline targets</h2>
+
+                            <p>
+                                Define what consistency means for you.
+                            </p>
+                        </div>
+
+                        <label for="discipline-target">
+                            Daily target percentage
+
+                            <input
+                                id="discipline-target"
+                                type="number"
+                                min="1"
+                                max="100"
+                                step="1"
+                                value="85">
+                        </label>
+
+                    </div>
+
+
+                    <div class="settings-section">
+
+                        <div>
+                            <h2>Scoring preferences</h2>
+
+                            <p>
+                                Choose how the three sections contribute
+                                to your overall daily score.
+                            </p>
+                        </div>
+
+                        <label for="scoring-method">
+                            Scoring method
+
+                            <select id="scoring-method">
+
+                                <option value="equal-sections">
+                                    Equal section weighting
+                                </option>
+
+                                <option value="all-items">
+                                    Equal weighting per applicable item
+                                </option>
+
+                            </select>
+                        </label>
+
+                    </div>
+
+
+                    <div class="settings-section">
+
+                        <div>
+                            <h2>Calendar preferences</h2>
+
+                            <p>
+                                Set the first day of your reporting week.
+                            </p>
+                        </div>
+
+                        <label for="week-start">
+                            Week starts on
+
+                            <select id="week-start">
+                                <option value="monday">Monday</option>
+                                <option value="sunday">Sunday</option>
+                            </select>
+                        </label>
+
+                    </div>
+
+
+                    <div class="settings-section">
+
+                        <div>
+                            <h2>Appearance</h2>
+
+                            <p>
+                                Reduce motion or customize your interface.
+                            </p>
+                        </div>
+
+                        <label for="motion-preference">
+                            Animation
+
+                            <select id="motion-preference">
+                                <option value="full">Full motion</option>
+                                <option value="subtle">Subtle motion</option>
+                                <option value="off">Reduced motion</option>
+                            </select>
+                        </label>
+
+                    </div>
+
+
+                    <div class="settings-section">
+
+                        <div>
+                            <h2>Data management</h2>
+
+                            <p>
+                                Export or restore your discipline records.
+                            </p>
+                        </div>
+
+                        <div class="settings-actions">
+
+                            <button
+                                class="secondary-button"
+                                id="export-data-button"
+                                type="button">
+                                Export records
+                            </button>
+
+                            <label class="secondary-button file-button">
+                                Restore backup
+
+                                <input
+                                    id="restore-data-input"
+                                    type="file"
+                                    accept="application/json"
+                                    hidden>
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="settings-save-row">
+
+                        <span id="settings-save-status"
+                              aria-live="polite">
+                        </span>
+
+                        <button
+                            class="primary-button"
+                            id="save-settings-button"
+                            type="button">
+                            Save settings →
+                        </button>
+
+                    </div>
+
+                </article>
+
+            </section>
+
+
+            <!-- FOOTER -->
+            <footer class="app-footer">
+
+                <span>
+                    DISCIPLINE HQ
+                    <span class="footer-separator">/</span>
+                    PROCESS OVER OUTCOME
+                </span>
+
+                <span id="footer-current-date"></span>
+
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <!-- NOTIFICATION AREA -->
+    <div
+        class="toast-container"
+        id="toast-container"
+        aria-live="polite"
+        aria-atomic="true">
+    </div>
+
+
+    <!-- CONFIRMATION DIALOG -->
+    <dialog
+        class="confirmation-dialog"
+        id="confirmation-dialog">
+
+        <form method="dialog">
+
+            <div class="eyebrow">PLEASE CONFIRM</div>
+
+            <h2 id="confirmation-title">Confirm action</h2>
+
+            <p id="confirmation-message"></p>
+
+            <div class="dialog-actions">
+
+                <button
+                    class="secondary-button"
+                    value="cancel">
+                    Cancel
+                </button>
+
+                <button
+                    class="primary-button"
+                    id="confirmation-accept"
+                    value="confirm">
+                    Confirm
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
+</body>
+</html>
