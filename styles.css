@@ -3468,3 +3468,50 @@ button, input, textarea, select { font-size: 13px; }
 @media (max-width: 700px) {
   body { background-attachment: scroll, scroll; background-position: center top, 58% top; }
 }
+
+
+/* Usability additions: session deletion, typography controls, AI Discipline Nurse */
+:root { --hq-font-body: 'DM Sans', 'Segoe UI', Roboto, Arial, sans-serif; }
+html[data-font-family="dm-sans"] body,
+html[data-font-family="dm-sans"] button,
+html[data-font-family="dm-sans"] input,
+html[data-font-family="dm-sans"] textarea,
+html[data-font-family="dm-sans"] select { font-family: 'DM Sans', 'Segoe UI', sans-serif !important; }
+html[data-font-family="inter"] body,
+html[data-font-family="inter"] button,
+html[data-font-family="inter"] input,
+html[data-font-family="inter"] textarea,
+html[data-font-family="inter"] select { font-family: Inter, 'Segoe UI', sans-serif !important; }
+html[data-font-family="system"] body,
+html[data-font-family="system"] button,
+html[data-font-family="system"] input,
+html[data-font-family="system"] textarea,
+html[data-font-family="system"] select { font-family: system-ui, sans-serif !important; }
+html[data-font-size="small"] body { font-size: 12px !important; }
+html[data-font-size="medium"] body { font-size: 14px !important; }
+html[data-font-size="large"] body { font-size: 16px !important; }
+html[data-font-size="small"] .page-view p,
+html[data-font-size="small"] .nav-item { font-size: .92em; }
+html[data-font-size="large"] .page-view p,
+html[data-font-size="large"] .nav-item { font-size: 1.06em; }
+.settings-control-pair { display:flex; gap:14px; flex-wrap:wrap; }
+.settings-control-pair label { min-width:150px; }
+.history-date-cell { white-space:nowrap; }
+.history-open-button { border:0; background:transparent; color:inherit; text-decoration:underline; text-decoration-color:rgba(72,229,176,.45); cursor:pointer; font:inherit; }
+.history-delete-button { margin-left:8px; padding:4px 8px; border:1px solid rgba(255,120,120,.32); border-radius:7px; background:rgba(150,45,45,.12); color:#ffb6b6; font-size:11px; cursor:pointer; }
+.history-delete-button:hover { background:rgba(190,55,55,.22); }
+.nurse-panel { padding:clamp(18px,2.5vw,30px); }
+.nurse-disclaimer { display:flex; gap:12px; padding:14px; margin-bottom:22px; border:1px solid rgba(72,229,176,.22); border-radius:12px; background:rgba(35,145,108,.08); }
+.nurse-disclaimer > span { color:#65e8ba; font-size:22px; }
+.nurse-disclaimer p { margin:5px 0 0; color:#a5b9bc; font-size:12px; }
+#nurse-entry { display:block; width:100%; margin:10px 0 14px; min-height:130px; padding:14px; border:1px solid rgba(102,183,183,.25); border-radius:12px; background:rgba(3,12,17,.72); color:#edf8f4; font:inherit; resize:vertical; }
+.nurse-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.nurse-response { margin-top:22px; padding:18px; border:1px solid rgba(102,183,183,.18); border-radius:14px; background:rgba(3,12,17,.5); }
+.nurse-response h2 { margin-top:0; font-size:17px; }
+.nurse-response p { line-height:1.7; color:#b9c9c9; }
+.nurse-history { margin-top:24px; }
+.nurse-history-list { display:grid; gap:10px; margin-top:12px; }
+.nurse-note-card { padding:13px 15px; border:1px solid rgba(102,183,183,.16); border-radius:12px; background:rgba(3,12,17,.46); }
+.nurse-note-card strong { font-size:11px; color:#68e7b8; }
+.nurse-note-card p { margin-bottom:0; white-space:pre-wrap; overflow-wrap:anywhere; }
+@media(max-width:650px) { .settings-control-pair { display:grid; grid-template-columns:1fr; } .history-delete-button { margin:5px 0 0 0; display:block; } }
