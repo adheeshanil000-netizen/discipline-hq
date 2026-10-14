@@ -235,6 +235,11 @@
                 ? normalized.settings.motionPreference
                 : "subtle";
 
+        normalized.settings.fontFamily = ["dm-sans", "inter", "system"].includes(normalized.settings.fontFamily)
+            ? normalized.settings.fontFamily : "dm-sans";
+        normalized.settings.fontSize = ["small", "medium", "large"].includes(normalized.settings.fontSize)
+            ? normalized.settings.fontSize : "medium";
+
         return normalized;
     }
 
@@ -1358,7 +1363,10 @@
 
             return `
                 <tr data-open-date="${escapeHTML(key)}">
-                    <td>${escapeHTML(formatDateKey(key))}</td>
+                    <td class="history-date-cell">
+                        <button class="history-open-button" type="button" data-open-date="${escapeHTML(key)}">${escapeHTML(formatDateKey(key))}</button>
+                        <button class="history-delete-button" type="button" data-delete-session="${escapeHTML(key)}" aria-label="Delete session for ${escapeHTML(formatDateKey(key))}" title="Delete this session">Delete</button>
+                    </td>
                     <td>${percentage(score.score)}</td>
                     <td>${stageScores[0]}</td>
                     <td>${stageScores[1]}</td>
@@ -1810,6 +1818,11 @@
         document.getElementById("motion-preference").value =
             state.settings.motionPreference;
 
+        const fontFamily = document.getElementById("font-family-setting");
+        const fontSize = document.getElementById("font-size-setting");
+        if (fontFamily) fontFamily.value = state.settings.fontFamily || "dm-sans";
+        if (fontSize) fontSize.value = state.settings.fontSize || "medium";
+        applyAppearancePreferences();
         applyMotionPreference();
     }
 
@@ -1835,7 +1848,10 @@
             document.getElementById("week-start").value;
         state.settings.motionPreference =
             document.getElementById("motion-preference").value;
+        state.settings.fontFamily = document.getElementById("font-family-setting")?.value || "dm-sans";
+        state.settings.fontSize = document.getElementById("font-size-setting")?.value || "medium";
 
+        applyAppearancePreferences();
         applyMotionPreference();
 
         if (!saveState()) {
@@ -1848,7 +1864,7 @@
         renderCalendar();
 
         document.getElementById("settings-save-status").textContent =
-            "Settings saved in this browser";
+            "Settings saved locally — cloud sync will be added later";
 
         showToast("Settings saved.");
     }
@@ -1963,6 +1979,101 @@
        EVENT LISTENERS
        ======================================================== */
 
+
+    function applyAppearancePreferences() {
+        const family = state?.settings?.fontFamily || "dm-sans";
+        const size = state?.settings?.fontSize || "medium";
+        document.documentElement.dataset.fontFamily = family;
+        document.documentElement.dataset.fontSize = size;
+    }
+
+    function deleteSessionRecord(key) {
+        const record = state.records[key];
+        if (!record) {
+            showToast("There is no saved session for that date.", "error");
+            return;
+        }
+        const confirmed = window.confirm(
+            `Delete the session for ${formatDateKey(key)}?\n\nThis permanently removes that date's checklist responses, session review, and associated reflection. Other dates and checklist templates will remain.`
+        );
+        if (!confirmed) return;
+
+        delete state.records[key];
+        delete state.reflections[key];
+        if (!saveState()) return;
+
+        renderDashboard();
+        renderHistory();
+        renderAnalytics();
+        renderReflections();
+        renderCalendar();
+        renderDailySession();
+        showToast(`Session for ${formatDateKey(key)} deleted.`);
+    }
+
+    function renderNurseHistory() {
+        const host = document.getElementById("nurse-history-list");
+        if (!host) return;
+        let notes = [];
+        try { notes = JSON.parse(localStorage.getItem("discipline-hq-nurse-notes-v1") || "[]"); }
+        catch (_) { notes = []; }
+        if (!notes.length) {
+            host.innerHTML = "<p>No saved coaching notes yet.</p>";
+            return;
+        }
+        host.replaceChildren();
+        notes.slice().reverse().forEach(note => {
+            const card = document.createElement("article");
+            card.className = "nurse-note-card";
+            const title = document.createElement("strong");
+            title.textContent = new Date(note.createdAt).toLocaleString();
+            const body = document.createElement("p");
+            body.textContent = note.text;
+            card.append(title, body);
+            host.appendChild(card);
+        });
+    }
+
+    function saveNurseNote(text) {
+        const clean = String(text || "").trim();
+        if (!clean) {
+            showToast("Write a note first.", "error");
+            return;
+        }
+        let notes = [];
+        try { notes = JSON.parse(localStorage.getItem("discipline-hq-nurse-notes-v1") || "[]"); }
+        catch (_) { notes = []; }
+        notes.push({ text: clean, createdAt: new Date().toISOString() });
+        try { localStorage.setItem("discipline-hq-nurse-notes-v1", JSON.stringify(notes.slice(-100))); }
+        catch (_) { showToast("Could not save coaching note in this browser.", "error"); return; }
+        renderNurseHistory();
+        showToast("Coaching note saved.");
+    }
+
+    function reviewNurseNote() {
+        const text = document.getElementById("nurse-entry")?.value.trim() || "";
+        const output = document.getElementById("nurse-response");
+        if (!text) {
+            showToast("Describe a session or mistake first.", "error");
+            return;
+        }
+        const lower = text.toLowerCase();
+        const points = [];
+        if (/revenge|win it back|recover loss/.test(lower)) points.push("Potential pattern: revenge trading. Consider a mandatory pause after a loss and stop if your written daily limit is reached.");
+        if (/early|before confirmation|fomo|miss the move|chase/.test(lower)) points.push("Potential pattern: fear of missing out or premature entry. Require every predefined confirmation before entry.");
+        if (/stop.?loss|moved my stop|widened/.test(lower)) points.push("Potential risk-control issue: define invalidation before entry and do not widen a stop to avoid a planned loss.");
+        if (/oversiz|lot size|risk too much|risk limit/.test(lower)) points.push("Potential position-sizing issue: calculate risk from the stop distance before entering and respect the written risk cap.");
+        if (!points.length) points.push("Separate the facts from the emotion: what was your plan, what did you actually do, which rule applied, and what single action will prevent a repeat?");
+        output.replaceChildren();
+        const heading = document.createElement("h2");
+        heading.textContent = "Structured review (preview)";
+        const paragraph = document.createElement("p");
+        paragraph.textContent = "This is a rule-based preview, not AI analysis. " + points.join(" ");
+        const next = document.createElement("p");
+        next.textContent = "Next step: write one specific rule for your next session and check whether you followed it in your post-market review.";
+        output.append(heading, paragraph, next);
+    }
+
     function bindEvents() {
         document.addEventListener("click", event => {
             const viewButton = event.target.closest("[data-view]");
@@ -2023,6 +2134,13 @@
 
             if (deleteButton) {
                 deleteChecklistItem(deleteButton.dataset.deleteItem);
+                return;
+            }
+
+            const deleteSessionButton = event.target.closest("[data-delete-session]");
+            if (deleteSessionButton) {
+                event.stopPropagation();
+                deleteSessionRecord(deleteSessionButton.dataset.deleteSession);
                 return;
             }
 
@@ -2158,6 +2276,17 @@
         document.getElementById("save-settings-button")
             .addEventListener("click", saveSettings);
 
+        document.getElementById("nurse-review-button")?.addEventListener("click", reviewNurseNote);
+        document.getElementById("nurse-save-button")?.addEventListener("click", () => {
+            saveNurseNote(document.getElementById("nurse-entry")?.value || "");
+        });
+        document.getElementById("nurse-clear-button")?.addEventListener("click", () => {
+            if (!window.confirm("Clear all locally saved AI Discipline Nurse notes?")) return;
+            localStorage.removeItem("discipline-hq-nurse-notes-v1");
+            renderNurseHistory();
+            showToast("Coaching notes cleared.");
+        });
+
         document.getElementById("export-data-button")
             .addEventListener("click", exportData);
 
@@ -2227,6 +2356,8 @@
         document.getElementById("session-date").value = todayKey();
 
         loadSettingsForm();
+        applyAppearancePreferences();
+        renderNurseHistory();
 
         ensureRecord(todayKey());
 
