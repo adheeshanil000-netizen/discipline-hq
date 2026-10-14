@@ -2251,3 +2251,41 @@
     }
 
 })();
+
+
+/* Small UI enhancements for the redesigned Discipline HQ shell. */
+(() => {
+  const themeButton = document.getElementById("theme-toggle");
+  const search = document.getElementById("global-search");
+  if (themeButton) {
+    const storedTheme = localStorage.getItem("discipline-hq-theme");
+    if (storedTheme === "light") document.body.classList.add("light-theme");
+    themeButton.addEventListener("click", () => {
+      document.body.classList.toggle("light-theme");
+      localStorage.setItem("discipline-hq-theme", document.body.classList.contains("light-theme") ? "light" : "dark");
+    });
+  }
+  if (search) {
+    search.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const query = search.value.trim().toLowerCase();
+      if (!query) return;
+      const labels = [...document.querySelectorAll(".nav-item")];
+      const match = labels.find(button => button.textContent.toLowerCase().includes(query));
+      if (match) match.click();
+      else {
+        const visibleText = [...document.querySelectorAll("h1,h2,h3,.section-heading,p,label")]
+          .find(el => el.textContent.toLowerCase().includes(query));
+        if (visibleText) visibleText.scrollIntoView({behavior:"smooth", block:"center"});
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault(); search.focus(); search.select();
+      }
+      if (event.key === "Escape" && document.activeElement === search) {
+        search.value = ""; search.blur();
+      }
+    });
+  }
+})();
