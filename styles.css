@@ -3219,3 +3219,124 @@ button, input, textarea, select { accent-color: #4de2b0; }
   .welcome-section::after { right: 22%; }
   .jarvis-root { right: 14px; bottom: 14px; }
 }
+
+
+
+/* FONT REFINEMENT — clean, premium, highly legible typography */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+:root {
+  --font-body: 'DM Sans', 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-display: 'Space Grotesk', 'DM Sans', 'Segoe UI', Arial, sans-serif;
+}
+html, body, button, input, textarea, select {
+  font-family: var(--font-body) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3, h4, .brand-copy strong, .metric-card strong, .section-heading h2,
+.welcome-copy h1, .jarvis-brand-copy strong {
+  font-family: var(--font-display) !important;
+  letter-spacing: -0.025em;
+}
+body { font-size: 14px; line-height: 1.55; }
+p, label, input, textarea, button { letter-spacing: 0; }
+.welcome-copy h1 { font-weight: 700; letter-spacing: -.045em; line-height: 1.04; }
+.eyebrow, .metric-label, .sidebar-label { font-weight: 700; letter-spacing: .14em; }
+
+
+
+/* JARVIS VISIBILITY FIX — viewport anchored pet + robust overlay */
+#jarvis-root.jarvis-root {
+  position: fixed !important;
+  right: max(22px, env(safe-area-inset-right)) !important;
+  bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: 2147483000 !important;
+  width: auto !important;
+  height: auto !important;
+  pointer-events: none;
+}
+#jarvis-root .jarvis-launcher,
+#jarvis-root .jarvis-greeting,
+#jarvis-root .jarvis-panel { pointer-events: auto; }
+#jarvis-root .jarvis-launcher {
+  position: relative !important;
+  display: grid !important;
+  width: 70px !important; height: 70px !important;
+  opacity: 1 !important; visibility: visible !important;
+}
+#jarvis-root .jarvis-launcher-core {
+  position: relative;
+  width: 40px !important; height: 40px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(140deg,#fff0bd 0%,#dba13c 28%,#a84330 29%,#6d211f 80%) !important;
+  border: 2px solid #f7d88c !important;
+  color: #fff0c2 !important;
+  font-size: 24px !important;
+  box-shadow: 0 0 15px rgba(74,199,255,.24), inset 0 0 12px rgba(255,225,165,.12);
+}
+#jarvis-root .jarvis-launcher-status { z-index: 3; }
+#jarvis-root .jarvis-greeting {
+  position: absolute !important;
+  right: 82px !important;
+  bottom: 14px !important;
+  max-width: min(250px, calc(100vw - 120px));
+}
+#jarvis-root .jarvis-panel {
+  position: absolute !important;
+  right: 0 !important; left: auto !important;
+  top: auto !important;
+  bottom: 88px !important;
+  width: min(390px, calc(100vw - 28px)) !important;
+  max-height: calc(100dvh - 125px) !important;
+}
+#jarvis-root[hidden], #jarvis-root .jarvis-launcher[hidden] { display: none !important; }
+@media (max-width: 600px) {
+  #jarvis-root.jarvis-root { right: 13px !important; bottom: 13px !important; }
+  #jarvis-root .jarvis-launcher { width: 62px !important; height: 62px !important; }
+  #jarvis-root .jarvis-greeting { right: 72px !important; bottom: 10px !important; }
+  #jarvis-root .jarvis-panel { bottom: 76px !important; }
+}
+
+
+
+/* JARVIS PET — CSS-rendered red/gold chibi powered-armour helper */
+.jarvis-pet-launcher {
+  overflow: visible !important; border: 0 !important; background: transparent !important;
+  box-shadow: none !important; border-radius: 0 !important;
+  width: 90px !important; height: 110px !important;
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,.4));
+  animation: jarvis-hover 3.1s ease-in-out infinite;
+}
+.jarvis-pet-launcher:hover { transform: translateY(-4px) scale(1.035) !important; }
+.jarvis-pet { position:absolute; inset:0; display:block; }
+.pet-aura { position:absolute; left:16px; top:19px; width:62px; height:70px; border-radius:50%; background:radial-gradient(ellipse,rgba(49,185,255,.19),rgba(255,171,69,.09) 48%,transparent 73%); filter:blur(4px); }
+.pet-head { position:absolute; z-index:4; left:23px; top:13px; width:46px; height:42px; border:2px solid #ffd98b; border-radius:42% 42% 38% 38%; background:linear-gradient(120deg,#fff0ba 0%,#d6a248 18%,#a84c32 19%,#76241f 53%,#e1a849 75%,#6b241e 100%); box-shadow:inset 0 0 0 2px rgba(255,237,178,.2),0 0 10px rgba(255,174,72,.18); clip-path:polygon(15% 0,85% 0,100% 25%,91% 78%,68% 100%,32% 100%,9% 78%,0 25%); }
+.pet-forehead { position:absolute; left:14px; top:0; width:16px; height:12px; background:linear-gradient(#fff0bb,#c88a35); clip-path:polygon(50% 0,100% 100%,0 100%); }
+.pet-eye { position:absolute; top:19px; width:12px; height:5px; background:#7eeaff; box-shadow:0 0 6px 2px rgba(53,207,255,.85); border-radius:5px 5px 2px 2px; }
+.pet-eye-left { left:6px; transform:skewY(-12deg); } .pet-eye-right { right:6px; transform:skewY(12deg); }
+.pet-cheek { position:absolute; top:26px; width:6px; height:8px; background:linear-gradient(#f7d783,#9c5427); border-radius:2px; }
+.pet-cheek-left { left:2px; } .pet-cheek-right { right:2px; }
+.pet-mouth { position:absolute; left:18px; bottom:5px; width:10px; height:3px; background:#50221a; border-radius:0 0 5px 5px; }
+.pet-antenna { position:absolute; z-index:3; left:44px; top:4px; width:5px; height:13px; border-radius:4px; background:linear-gradient(90deg,#9b5126,#ffdf91,#a65a2d); }
+.pet-antenna::before { content:""; position:absolute; left:-2px; top:-3px; width:9px; height:7px; border-radius:50%; background:#75e7ff; box-shadow:0 0 8px #4bcfff; }
+.pet-body { position:absolute; z-index:3; left:28px; top:52px; width:36px; height:31px; border:2px solid #d7a64e; border-radius:10px 10px 12px 12px; background:linear-gradient(115deg,#dca64d 0%,#7d2924 24%,#b94832 51%,#62211f 76%,#f0bd63 100%); box-shadow:inset 0 0 0 2px rgba(255,229,158,.13); }
+.pet-reactor { position:absolute; left:11px; top:8px; width:12px; height:12px; border:2px solid #bdf6ff; border-radius:50%; background:radial-gradient(circle,#f4ffff 0%,#52dfff 35%,#1473bc 68%); box-shadow:0 0 8px 3px rgba(69,206,255,.7); }
+.pet-shoulder { position:absolute; top:2px; width:13px; height:16px; border:1px solid #f3cb79; border-radius:5px; background:linear-gradient(130deg,#ffdf8b,#b44d32 45%,#75251f); }
+.pet-shoulder-left { left:-9px; transform:rotate(-18deg); } .pet-shoulder-right { right:-9px; transform:rotate(18deg); }
+.pet-arm { position:absolute; z-index:2; top:56px; width:10px; height:26px; border:1px solid #e8bb69; border-radius:6px; background:linear-gradient(90deg,#76251f,#d65a3d,#f1ca76); }
+.pet-arm-left { left:19px; transform:rotate(16deg); } .pet-arm-right { right:17px; transform:rotate(-15deg); }
+.pet-arm span { position:absolute; bottom:-5px; left:-2px; width:13px; height:12px; border:1px solid #f1ce80; border-radius:50%; background:radial-gradient(circle,#aaf4ff 0 23%,#238bc0 28%,#9b392a 70%); box-shadow:0 0 6px rgba(67,213,255,.65); }
+.pet-leg { position:absolute; z-index:2; top:78px; width:12px; height:17px; border:1px solid #f2c978; border-radius:4px; background:linear-gradient(90deg,#70231e,#b94b32,#efbd61); }
+.pet-leg-left { left:32px; transform:rotate(6deg); } .pet-leg-right { right:29px; transform:rotate(-6deg); }
+.pet-boot { position:absolute; z-index:3; top:91px; width:16px; height:8px; border:1px solid #f6d184; border-radius:5px 5px 3px 3px; background:linear-gradient(#e8b653,#77251e); }
+.pet-boot-left { left:29px; } .pet-boot-right { right:26px; }
+.pet-thruster { position:absolute; z-index:1; top:91px; width:8px; height:17px; background:linear-gradient(#c6f9ff,rgba(53,190,255,.55),transparent); filter:blur(2px); opacity:.9; animation:pet-jet .55s ease-in-out infinite alternate; }
+.pet-thruster-left { left:33px; } .pet-thruster-right { right:30px; animation-delay:.25s; }
+@keyframes jarvis-hover { 0%,100% { transform:translateY(0) rotate(-1deg); } 50% { transform:translateY(-6px) rotate(1deg); } }
+@keyframes pet-jet { from { opacity:.5; transform:scaleY(.8); } to { opacity:1; transform:scaleY(1.2); } }
+@media (max-width:600px) {
+  .jarvis-pet-launcher { width:78px !important; height:96px !important; transform:scale(.9); transform-origin:bottom right; }
+}
