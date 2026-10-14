@@ -15,7 +15,6 @@
     <link rel="stylesheet" href="styles.css">
 
     <script src="app.js" defer></script>
-    <script src="jarvis.js" defer></script>
 </head>
 
 <body>
@@ -1663,63 +1662,5 @@
         </form>
 
     </dialog>
-
-
-<!-- JARVIS floating assistant -->
-<div class="jarvis-root" id="jarvis-root">
-  <div class="jarvis-greeting" id="jarvis-greeting" role="status">
-    <span class="jarvis-greeting-dot" aria-hidden="true"></span>
-    <span>Hi, I’m Jarvis.</span>
-    <button class="jarvis-greeting-dismiss" id="jarvis-greeting-dismiss" type="button" aria-label="Dismiss greeting">×</button>
-  </div>
-
-  <button class="jarvis-launcher jarvis-pet-launcher" id="jarvis-launcher" type="button"
-          aria-label="Open Jarvis AI assistant" aria-expanded="false" aria-controls="jarvis-panel">
-    <span class="jarvis-pet" aria-hidden="true">
-      <span class="pet-aura"></span>
-      <span class="pet-antenna"></span>
-      <span class="pet-head">
-        <span class="pet-forehead"></span>
-        <span class="pet-eye pet-eye-left"></span><span class="pet-eye pet-eye-right"></span>
-        <span class="pet-cheek pet-cheek-left"></span><span class="pet-cheek pet-cheek-right"></span>
-        <span class="pet-mouth"></span>
-      </span>
-      <span class="pet-body"><span class="pet-reactor"></span><span class="pet-shoulder pet-shoulder-left"></span><span class="pet-shoulder pet-shoulder-right"></span></span>
-      <span class="pet-arm pet-arm-left"><span></span></span><span class="pet-arm pet-arm-right"><span></span></span>
-      <span class="pet-leg pet-leg-left"></span><span class="pet-leg pet-leg-right"></span>
-      <span class="pet-boot pet-boot-left"></span><span class="pet-boot pet-boot-right"></span>
-      <span class="pet-thruster pet-thruster-left"></span><span class="pet-thruster pet-thruster-right"></span>
-    </span>
-    <span class="jarvis-launcher-status" aria-hidden="true"></span>
-  </button>
-
-  <section class="jarvis-panel" id="jarvis-panel" aria-label="Jarvis chat" aria-hidden="true">
-    <header class="jarvis-header">
-      <div class="jarvis-brand-mark" aria-hidden="true">J</div>
-      <div class="jarvis-brand-copy">
-        <strong>Jarvis</strong>
-        <span><i class="jarvis-online-dot"></i> Your Discipline HQ copilot</span>
-      </div>
-      <button class="jarvis-icon-button" id="jarvis-clear" type="button" title="Start a new chat" aria-label="Start a new chat">↻</button>
-      <button class="jarvis-icon-button" id="jarvis-close" type="button" title="Close chat" aria-label="Close Jarvis">×</button>
-    </header>
-    <div class="jarvis-notice"><span aria-hidden="true">✦</span><span>Assistant preview · Gemini API connection will be added later</span></div>
-    <div class="jarvis-messages" id="jarvis-messages" role="log" aria-live="polite" aria-relevant="additions text">
-      <div class="jarvis-message jarvis-message-bot"><div class="jarvis-avatar" aria-hidden="true">J</div><div class="jarvis-bubble-wrap"><div class="jarvis-sender">JARVIS <span>READY</span></div><div class="jarvis-bubble">Hey! I’m Jarvis. I can help you navigate Discipline HQ, think through your trading process, review your discipline habits, or chat about general topics. What’s on your mind?</div></div></div>
-    </div>
-    <div class="jarvis-suggestions" id="jarvis-suggestions">
-      <button type="button" data-jarvis-prompt="How do I use Discipline HQ?">How to use this app</button>
-      <button type="button" data-jarvis-prompt="Help me build a disciplined trading routine.">Build my routine</button>
-      <button type="button" data-jarvis-prompt="Give me a quick motivational reset.">Quick reset</button>
-    </div>
-    <form class="jarvis-composer" id="jarvis-form">
-      <label class="jarvis-sr-only" for="jarvis-input">Message Jarvis</label>
-      <textarea id="jarvis-input" rows="1" maxlength="4000" placeholder="Ask Jarvis anything…" autocomplete="off"></textarea>
-      <button class="jarvis-send" id="jarvis-send" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 20 4l-5 16-3.5-6.5L4 12Z"></path><path d="m11.5 13.5 4-4"></path></svg></button>
-    </form>
-    <div class="jarvis-footer"><span>Enter to send · Shift + Enter for a new line</span><span>JARVIS <b>●</b></span></div>
-  </section>
-</div>
-
 </body>
 </html>
