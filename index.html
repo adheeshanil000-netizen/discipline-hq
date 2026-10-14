@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="styles.css">
 
     <script src="app.js" defer></script>
+    <script src="jarvis.js" defer></script>
 </head>
 
 <body>
@@ -27,11 +28,11 @@
         <aside class="sidebar" id="sidebar">
 
             <a class="brand" href="#dashboard" aria-label="Discipline HQ home">
-                <span class="brand-icon">D</span>
+                <span class="brand-icon"><span class="brand-icon-glyph">Ⅲ</span></span>
 
                 <span class="brand-copy">
-                    <strong>DISCIPLINE</strong>
-                    <small>TRADING HQ</small>
+                    <strong>DISCIPLINE HQ</strong>
+                    <small>TRADING WITH INTENTION</small>
                 </span>
             </a>
 
@@ -110,7 +111,7 @@
                 </div>
 
                 <div class="sidebar-version">
-                    DISCIPLINE HQ <span>•</span> V1
+                    DISCIPLINE HQ <span>•</span> V1.0.0
                 </div>
 
             </div>
@@ -125,6 +126,7 @@
             <header class="topbar">
 
                 <div class="topbar-left">
+                    <label class="global-search-wrap" for="global-search"><span aria-hidden="true">⌕</span><input id="global-search" type="search" placeholder="Search anything..." autocomplete="off"><kbd>Ctrl K</kbd></label>
 
                     <button
                         class="mobile-menu-button"
@@ -144,6 +146,7 @@
                 </div>
 
                 <div class="topbar-right">
+                    <button class="icon-button theme-toggle-button" id="theme-toggle" type="button" aria-label="Toggle light and dark appearance" title="Toggle appearance">☼</button>
 
                     <div class="current-date">
                         <span class="date-dot"></span>
@@ -1660,6 +1663,65 @@
         </form>
 
     </dialog>
+
+<!-- JARVIS floating assistant -->
+<div class="jarvis-root" id="jarvis-root">
+  <div class="jarvis-greeting" id="jarvis-greeting" role="status">
+    <span class="jarvis-greeting-dot" aria-hidden="true"></span>
+    <span>Hi, I’m Jarvis.</span>
+    <button class="jarvis-greeting-dismiss" id="jarvis-greeting-dismiss" type="button" aria-label="Dismiss greeting">×</button>
+  </div>
+
+  <button class="jarvis-launcher" id="jarvis-launcher" type="button"
+          aria-label="Open Jarvis AI assistant" aria-expanded="false" aria-controls="jarvis-panel">
+    <span class="jarvis-launcher-orbit" aria-hidden="true"></span>
+    <span class="jarvis-launcher-core" aria-hidden="true">J</span>
+    <span class="jarvis-launcher-status" aria-hidden="true"></span>
+  </button>
+
+  <section class="jarvis-panel" id="jarvis-panel" aria-label="Jarvis chat" aria-hidden="true">
+    <header class="jarvis-header">
+      <div class="jarvis-brand-mark" aria-hidden="true">J</div>
+      <div class="jarvis-brand-copy">
+        <strong>Jarvis</strong>
+        <span><i class="jarvis-online-dot"></i> Your Discipline HQ copilot</span>
+      </div>
+      <button class="jarvis-icon-button" id="jarvis-clear" type="button" title="Start a new chat" aria-label="Start a new chat">↻</button>
+      <button class="jarvis-icon-button" id="jarvis-close" type="button" title="Close chat" aria-label="Close Jarvis">×</button>
+    </header>
+
+    <div class="jarvis-notice">
+      <span aria-hidden="true">✦</span>
+      <span>Assistant preview · Gemini API connection will be added later</span>
+    </div>
+
+    <div class="jarvis-messages" id="jarvis-messages" role="log" aria-live="polite" aria-relevant="additions text">
+      <div class="jarvis-message jarvis-message-bot">
+        <div class="jarvis-avatar" aria-hidden="true">J</div>
+        <div class="jarvis-bubble-wrap">
+          <div class="jarvis-sender">JARVIS <span>READY</span></div>
+          <div class="jarvis-bubble">Hey! I’m Jarvis. I can help you navigate Discipline HQ, think through your trading process, review your discipline habits, or chat about general topics. What’s on your mind?</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="jarvis-suggestions" id="jarvis-suggestions">
+      <button type="button" data-jarvis-prompt="How do I use Discipline HQ?">How to use this app</button>
+      <button type="button" data-jarvis-prompt="Help me build a disciplined trading routine.">Build my routine</button>
+      <button type="button" data-jarvis-prompt="Give me a quick motivational reset.">Quick reset</button>
+    </div>
+
+    <form class="jarvis-composer" id="jarvis-form">
+      <label class="jarvis-sr-only" for="jarvis-input">Message Jarvis</label>
+      <textarea id="jarvis-input" rows="1" maxlength="4000" placeholder="Ask Jarvis anything…" autocomplete="off"></textarea>
+      <button class="jarvis-send" id="jarvis-send" type="submit" aria-label="Send message">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12 20 4l-5 16-3.5-6.5L4 12Z"></path><path d="m11.5 13.5 4-4"></path></svg>
+      </button>
+    </form>
+    <div class="jarvis-footer"><span>Enter to send · Shift + Enter for a new line</span><span>JARVIS <b>●</b></span></div>
+  </section>
+</div>
+
 
 </body>
 </html>
