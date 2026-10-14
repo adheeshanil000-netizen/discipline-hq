@@ -3340,3 +3340,131 @@ p, label, input, textarea, button { letter-spacing: 0; }
 @media (max-width:600px) {
   .jarvis-pet-launcher { width:78px !important; height:96px !important; transform:scale(.9); transform-origin:bottom right; }
 }
+
+
+/* REFERENCE DESIGN BACKGROUND ART */
+@font-face { font-family: 'HQ Display'; src: local('Space Grotesk'); }
+body {
+  background-color: #02090e;
+  background-image:
+    linear-gradient(90deg, rgba(1,8,12,.25) 0%, rgba(1,8,12,.22) 48%, rgba(1,8,12,.36) 100%),
+    url('assets/earth-orbit-background.png');
+  background-size: cover, cover;
+  background-position: center top, center top;
+  background-attachment: fixed, fixed;
+  background-repeat: no-repeat, no-repeat;
+}
+/* REFERENCE DESIGN BACKGROUND ART */
+
+/* CLEAN UI REFINEMENT — Jarvis removed; preserve core Discipline HQ features */
+#jarvis-root, .jarvis-root, .jarvis-panel, .jarvis-launcher, .jarvis-greeting,
+.jarvis-pet, .jarvis-pet-launcher, .jarvis-avatar, .jarvis-message,
+.jarvis-composer, .jarvis-suggestions, .jarvis-notice, .jarvis-footer {
+  display: none !important;
+}
+:root {
+  --font-body: 'DM Sans', 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-display: 'Space Grotesk', 'DM Sans', 'Segoe UI', Arial, sans-serif;
+  --accent: #48e5b0;
+  --gold: #e8bb68;
+}
+html { scroll-behavior: smooth; }
+body, button, input, textarea, select {
+  font-family: var(--font-body) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3, h4, .brand-copy strong, .metric-card strong, .section-heading h2 {
+  font-family: var(--font-display) !important;
+  letter-spacing: -.025em;
+}
+body { font-size: 14px; line-height: 1.6; }
+p { line-height: 1.7; }
+button, input, textarea, select { font-size: 13px; }
+.sidebar {
+  background: linear-gradient(180deg, rgba(4,11,15,.98), rgba(5,13,17,.96));
+  border-right-color: rgba(100,173,175,.17);
+}
+.main-content { min-width: 0; }
+.topbar {
+  min-height: 68px;
+  padding-inline: clamp(18px, 2.6vw, 42px);
+}
+.global-search-wrap { max-width: 370px; }
+.welcome-section {
+  min-height: 265px;
+  padding: clamp(26px, 3vw, 44px);
+  border: 1px solid rgba(93,182,187,.15);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 18px 55px rgba(0,0,0,.1);
+}
+.welcome-copy { max-width: 630px; }
+.welcome-copy h1 {
+  font-size: clamp(2.2rem, 4.2vw, 3.7rem);
+  line-height: 1.04;
+  font-weight: 700;
+}
+.welcome-copy p { max-width: 540px; font-size: 14px; color: #a9bec0; }
+.section-heading h2 { font-size: 20px; font-weight: 650; }
+.metric-card, .score-card {
+  border-radius: 17px;
+  padding: clamp(18px, 2vw, 26px);
+  border: 1px solid rgba(102,183,183,.2);
+  background: linear-gradient(145deg, rgba(8,22,27,.94), rgba(4,13,17,.92));
+  box-shadow: 0 14px 36px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.025);
+}
+.metric-card:hover {
+  border-color: rgba(72,229,176,.35);
+  box-shadow: 0 18px 42px rgba(0,0,0,.18), 0 0 22px rgba(72,229,176,.035);
+}
+.metric-label { font-size: 10px; font-weight: 700; letter-spacing: .13em; }
+.nav-item { border-radius: 12px; min-height: 48px; }
+.nav-item span:last-child { font-weight: 550; }
+.primary-button { border-radius: 12px; min-height: 44px; font-weight: 700; }
+.section-heading p, .metric-card p { color: #a5b9bc; }
+:focus-visible { outline: 2px solid #5ee7bb; outline-offset: 3px; }
+@media (max-width: 700px) {
+  .topbar { gap: 10px; padding-inline: 14px; }
+  .topbar-left { min-width: 0; gap: 10px; }
+  .breadcrumb { display: none; }
+  .global-search-wrap { width: min(48vw, 250px); }
+  .welcome-section { padding: 22px 18px; min-height: 230px; }
+  .welcome-copy h1 { font-size: clamp(1.9rem, 8vw, 2.65rem); }
+  .metrics-grid { grid-template-columns: 1fr !important; }
+  .metric-card { padding: 18px; }
+  .period-selector { max-width: 100%; }
+}
+
+/* Screenshot-inspired premium glass surfaces and spacing */
+.sidebar {
+  background: linear-gradient(180deg, rgba(2,9,14,.94), rgba(2,9,14,.83)) !important;
+  backdrop-filter: blur(12px);
+}
+.topbar {
+  background: linear-gradient(90deg, rgba(2,9,14,.72), rgba(2,9,14,.38)) !important;
+  backdrop-filter: blur(10px);
+}
+.welcome-section {
+  background:
+    linear-gradient(90deg, rgba(2,9,14,.82) 0%, rgba(2,9,14,.57) 48%, rgba(2,9,14,.1) 100%) !important;
+  border-color: rgba(64,195,213,.14) !important;
+  box-shadow: none !important;
+}
+.welcome-section::before { opacity: .35; }
+.metric-card, .score-card, .sidebar-status, .section-card, .session-card,
+.history-card, .analytics-card, .reflection-card {
+  background: linear-gradient(145deg, rgba(5,19,25,.84), rgba(3,12,17,.83)) !important;
+  backdrop-filter: blur(12px);
+  border-color: rgba(73,172,184,.23) !important;
+}
+.nav-item.active {
+  background: linear-gradient(100deg, rgba(13,119,91,.4), rgba(5,36,34,.54)) !important;
+  border-color: rgba(49,223,174,.6) !important;
+}
+.brand-icon {
+  background: linear-gradient(145deg,#fff2b4 0%,#dca33e 35%,#7c4b11 70%,#f8d98e 100%) !important;
+}
+.welcome-copy h1 { text-shadow: 0 2px 25px rgba(0,0,0,.24); }
+@media (max-width: 700px) {
+  body { background-attachment: scroll, scroll; background-position: center top, 58% top; }
+}
