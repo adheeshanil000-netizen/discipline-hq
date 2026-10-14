@@ -90,6 +90,13 @@
                 </button>
 
                 <button class="nav-item"
+                        data-view="nurse"
+                        type="button">
+                    <span class="nav-icon">✚</span>
+                    <span>AI Discipline Nurse</span>
+                </button>
+
+                <button class="nav-item"
                         data-view="settings"
                         type="button">
                     <span class="nav-icon">⚙</span>
@@ -1426,6 +1433,37 @@
             </section>
 
 
+            <!-- AI DISCIPLINE NURSE VIEW -->
+            <section class="page-view" id="view-nurse" aria-labelledby="nurse-title" hidden>
+                <div class="page-intro">
+                    <div>
+                        <div class="eyebrow">PERSONAL COACHING</div>
+                        <h1 id="nurse-title">AI Discipline Nurse</h1>
+                        <p>A dedicated space to review trading mistakes, identify patterns, and plan improvements.</p>
+                    </div>
+                </div>
+                <article class="panel nurse-panel">
+                    <div class="nurse-disclaimer">
+                        <span>✦</span>
+                        <div><strong>Coaching workspace preview</strong><p>Until we connect a secure AI backend, this page saves your notes in this browser and provides basic prompts—not genuine AI analysis.</p></div>
+                    </div>
+                    <label for="nurse-entry">What happened in your session?</label>
+                    <textarea id="nurse-entry" rows="5" placeholder="Example: I entered before confirmation, felt afraid of missing the move, and moved my stop loss…"></textarea>
+                    <div class="nurse-actions">
+                        <button class="primary-button" type="button" id="nurse-review-button">Review my mistake</button>
+                        <button class="secondary-button" type="button" id="nurse-save-button">Save reflection</button>
+                    </div>
+                    <div class="nurse-response" id="nurse-response" aria-live="polite">
+                        <h2>Your coaching notes</h2>
+                        <p>Describe a mistake or recurring pattern, then choose “Review my mistake” for a structured offline prompt.</p>
+                    </div>
+                    <div class="nurse-history">
+                        <div class="section-heading"><h2>Previous notes</h2><button class="secondary-button" type="button" id="nurse-clear-button">Clear notes</button></div>
+                        <div id="nurse-history-list" class="nurse-history-list"><p>No saved coaching notes yet.</p></div>
+                    </div>
+                </article>
+            </section>
+
             <!-- SETTINGS VIEW -->
             <section class="page-view"
                      id="view-settings"
@@ -1524,6 +1562,29 @@
 
                     </div>
 
+
+                    <div class="settings-section">
+                        <div>
+                            <h2>Typography</h2>
+                            <p>Adjust the text style while keeping the current visual design.</p>
+                        </div>
+                        <div class="settings-control-pair">
+                            <label for="font-family-setting">Font family
+                                <select id="font-family-setting">
+                                    <option value="dm-sans">DM Sans</option>
+                                    <option value="inter">Inter</option>
+                                    <option value="system">System default</option>
+                                </select>
+                            </label>
+                            <label for="font-size-setting">Font size
+                                <select id="font-size-setting">
+                                    <option value="small">Small</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="large">Large</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
 
                     <div class="settings-section">
 
