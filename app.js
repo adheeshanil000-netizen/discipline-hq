@@ -584,6 +584,24 @@
        DAILY SESSION
        ======================================================== */
 
+    function recordHasMeaningfulActivity(record) {
+        if (!record) return false;
+
+        const hasCheckedItems = Object.values(record.answers || {}).some(stageAnswers =>
+            Object.values(stageAnswers || {}).some(value => value === true)
+        );
+        const hasNotApplicable = Object.values(record.notApplicable || {}).some(Boolean);
+        const hasReflection = Object.values(record.reflections || {}).some(value =>
+            String(value || "").trim().length > 0
+        );
+
+        return hasCheckedItems ||
+            hasNotApplicable ||
+            hasReflection ||
+            (record.compliance && record.compliance !== "unreviewed") ||
+            Boolean(String(record.violationNotes || "").trim());
+    }
+
     function renderDailySession() {
         const dateInput = document.getElementById("session-date");
 
@@ -593,6 +611,16 @@
 
         const selectedKey = dateInput.value;
         const record = state.records[selectedKey] || createEmptyRecord(selectedKey);
+
+        /*
+         * Checklist editor changes the current template. Existing sessions keep
+         * their historical snapshot once the user has started recording activity.
+         * If this date has no meaningful activity yet, refresh its snapshot so
+         * the daily checklist displays the latest template rather than stale items.
+         */
+        if (!recordHasMeaningfulActivity(record)) {
+            record.checklistSnapshot = structuredClone(state.checklists);
+        }
 
         document.getElementById("compliance-review").value =
             record.compliance;
