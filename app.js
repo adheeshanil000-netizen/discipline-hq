@@ -18,8 +18,10 @@
     let cloudSyncTimer = null;
     let cloudSyncChain = Promise.resolve();
     let cloudLastUpdatedAt = null;
+    let cloudLastVersion = 0;
     let cloudSyncPaused = false;
     let cloudPollingTimer = null;
+    let cloudPollInFlight = false;
     let cloudUiReady = false;
 
     const STAGES = {
@@ -2496,6 +2498,7 @@
             body: JSON.stringify({ data: envelope })
         });
         cloudLastUpdatedAt = result.updatedAt || new Date().toISOString();
+        cloudLastVersion = Math.max(cloudTimestampValue(cloudLastUpdatedAt), cloudTimestampValue(envelope.clientUpdatedAt));
         updateCloudStatus("Synced", "success");
     }
 
@@ -2700,6 +2703,7 @@
                 if (remote.data && (remote.data.state || remote.data.checklists)) {
                     pendingCloudEnvelope = remote.data;
                     cloudLastUpdatedAt = remote.updatedAt || null;
+                    cloudLastVersion = Math.max(cloudTimestampValue(remote.updatedAt), cloudTimestampValue(remote.data?.clientUpdatedAt));
                     backdrop.hidden = false;
                     document.getElementById("cloud-modal-title").textContent = "Choose which data to keep";
                     form.hidden = true;
@@ -2736,6 +2740,7 @@
                 applyCloudEnvelope(envelope);
                 const remote = await cloudRequest("/api/data", { method: "GET" });
                 cloudLastUpdatedAt = remote.updatedAt || null;
+                cloudLastVersion = Math.max(cloudTimestampValue(remote.updatedAt), cloudTimestampValue(remote.data?.clientUpdatedAt));
                 backdrop.hidden = true;
                 startCloudPolling();
                 updateCloudStatus("Synced", "success");
@@ -2754,6 +2759,7 @@
                 await pushCloudData();
                 const remote = await cloudRequest("/api/data", { method: "GET" });
                 cloudLastUpdatedAt = remote.updatedAt || null;
+                cloudLastVersion = Math.max(cloudTimestampValue(remote.updatedAt), cloudTimestampValue(remote.data?.clientUpdatedAt));
                 backdrop.hidden = true;
                 startCloudPolling();
                 updateCloudStatus("Synced", "success");
@@ -2786,35 +2792,73 @@
         showToast("Signed out of cloud. Local data remains on this device.");
     }
 
-    function startCloudPolling() {
-        if (cloudPollingTimer) clearInterval(cloudPollingTimer);
-        cloudPollingTimer = setInterval(async () => {
-            if (!getCloudToken() || cloudSyncPaused || document.hidden) return;
-            try {
-                const remote = await cloudRequest("/api/data", { method: "GET" });
-                if (!remote.data) return;
-                const stamp = remote.updatedAt || remote.data.clientUpdatedAt || null;
-                if (!cloudLastUpdatedAt) {
-                    cloudLastUpdatedAt = stamp;
+    function cloudTimestampValue(value) {
+        if (!value) return 0;
+        // D1 CURRENT_TIMESTAMP is "YYYY-MM-DD HH:MM:SS" while the Worker
+        // response can be ISO-8601. Compare parsed times, not raw strings.
+        const text = String(value);
+        const normalized = /^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(text)
+            ? `${text.replace(" ", "T")}Z`
+            : text;
+        const valueMs = Date.parse(normalized);
+        return Number.isFinite(valueMs) ? valueMs : 0;
+    }
+
+    async function pollCloudOnce() {
+        if (!getCloudToken() || cloudSyncPaused || document.hidden || cloudPollInFlight) return;
+        cloudPollInFlight = true;
+        try {
+            const remote = await cloudRequest("/api/data", { method: "GET" });
+            if (!remote.data) return;
+
+            const stamp = remote.updatedAt || remote.data.clientUpdatedAt || null;
+            const incomingVersion = Math.max(
+                cloudTimestampValue(remote.updatedAt),
+                cloudTimestampValue(remote.data.clientUpdatedAt)
+            );
+
+            if (!cloudLastUpdatedAt && !cloudLastVersion) {
+                cloudLastUpdatedAt = stamp;
+                cloudLastVersion = incomingVersion;
+                return;
+            }
+
+            if (stamp && incomingVersion > cloudLastVersion) {
+                const hasUnsaved = document.getElementById("daily-save-status")?.textContent?.toLowerCase().includes("unsaved")
+                    || document.getElementById("reflection-save-status")?.textContent?.toLowerCase().includes("unsaved");
+                if (hasUnsaved) {
+                    updateCloudStatus("Other device changed data", "pending");
                     return;
                 }
-                if (stamp && stamp > cloudLastUpdatedAt) {
-                    const hasUnsaved = document.getElementById("daily-save-status")?.textContent?.toLowerCase().includes("unsaved")
-                        || document.getElementById("reflection-save-status")?.textContent?.toLowerCase().includes("unsaved");
-                    if (hasUnsaved) {
-                        updateCloudStatus("Other device changed data", "pending");
-                        return;
-                    }
-                    applyCloudEnvelope(remote.data);
-                    cloudLastUpdatedAt = stamp;
-                    updateCloudStatus("Updated from cloud", "success");
-                }
-            } catch (error) {
-                console.warn("Cloud polling failed:", error);
-                if (error.message && error.message.includes("sign in")) updateCloudStatus("Sign in required", "error");
+
+                applyCloudEnvelope(remote.data);
+                cloudLastUpdatedAt = stamp;
+                cloudLastVersion = incomingVersion;
+                updateCloudStatus("Updated from cloud", "success");
             }
-        }, 12000);
+        } catch (error) {
+            console.warn("Cloud polling failed:", error);
+            if (error.message && error.message.includes("sign in")) {
+                updateCloudStatus("Sign in required", "error");
+            }
+        } finally {
+            cloudPollInFlight = false;
+        }
     }
+
+    function startCloudPolling() {
+        if (cloudPollingTimer) clearInterval(cloudPollingTimer);
+        // Poll promptly, then keep checking while the page is open. Browser
+        // background tabs may throttle timers, so focus/visibility events below
+        // also trigger an immediate refresh.
+        pollCloudOnce();
+        cloudPollingTimer = setInterval(pollCloudOnce, 4000);
+    }
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) pollCloudOnce();
+    });
+    window.addEventListener("focus", () => pollCloudOnce());
 
 
     /* ========================================================
