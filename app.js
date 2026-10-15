@@ -11,6 +11,16 @@
     "use strict";
 
     const APP_KEY = "discipline-hq-v1";
+    const CLOUD_API = "https://discipline-hq-api.adheeshanil000.workers.dev";
+    const CLOUD_TOKEN_KEY = "discipline-hq-cloud-token-v1";
+    const CLOUD_EMAIL_KEY = "discipline-hq-cloud-email-v1";
+    const THEME_KEY = "discipline-hq-theme";
+    let cloudSyncTimer = null;
+    let cloudSyncChain = Promise.resolve();
+    let cloudLastUpdatedAt = null;
+    let cloudSyncPaused = false;
+    let cloudPollingTimer = null;
+    let cloudUiReady = false;
 
     const STAGES = {
         premarket: {
@@ -262,6 +272,7 @@
     function saveState() {
         try {
             localStorage.setItem(APP_KEY, JSON.stringify(state));
+            if (!cloudSyncPaused && getCloudToken()) scheduleCloudSync();
             return true;
         } catch (error) {
             console.error("Could not save Discipline HQ data:", error);
@@ -2050,6 +2061,7 @@
         try { localStorage.setItem("discipline-hq-nurse-notes-v1", JSON.stringify(notes.slice(-100))); }
         catch (_) { showToast("Could not save coaching note in this browser.", "error"); return; }
         renderNurseHistory();
+        if (getCloudToken()) scheduleCloudSync();
         showToast("Coaching note saved.");
     }
 
@@ -2292,6 +2304,7 @@
             if (!window.confirm("Clear all locally saved AI Discipline Nurse notes?")) return;
             localStorage.removeItem("discipline-hq-nurse-notes-v1");
             renderNurseHistory();
+            if (getCloudToken()) scheduleCloudSync();
             showToast("Coaching notes cleared.");
         });
 
@@ -2352,6 +2365,394 @@
     }
 
 
+
+    /* ========================================================
+       CLOUD SYNC — Cloudflare Workers + D1
+       One account can be used on multiple devices.
+       ======================================================== */
+
+    function getCloudToken() {
+        return localStorage.getItem(CLOUD_TOKEN_KEY) || "";
+    }
+
+    function getCloudEmail() {
+        return localStorage.getItem(CLOUD_EMAIL_KEY) || "";
+    }
+
+    async function cloudRequest(path, options = {}) {
+        const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+        const token = getCloudToken();
+        if (token) headers.Authorization = `Bearer ${token}`;
+
+        const response = await fetch(`${CLOUD_API}${path}`, {
+            ...options,
+            headers,
+            cache: "no-store"
+        });
+
+        let payload;
+        try { payload = await response.json(); }
+        catch (_) { payload = {}; }
+
+        if (!response.ok) {
+            const message = payload.error || `Cloud request failed (${response.status}).`;
+            if (response.status === 401) {
+                localStorage.removeItem(CLOUD_TOKEN_KEY);
+                updateCloudStatus("Sign in required", "error");
+            }
+            throw new Error(message);
+        }
+        return payload;
+    }
+
+    function getCloudEnvelope() {
+        let nurseNotes = [];
+        try {
+            nurseNotes = JSON.parse(localStorage.getItem("discipline-hq-nurse-notes-v1") || "[]");
+            if (!Array.isArray(nurseNotes)) nurseNotes = [];
+        } catch (_) { nurseNotes = []; }
+
+        return {
+            state,
+            nurseNotes,
+            theme: localStorage.getItem(THEME_KEY) || "dark",
+            schemaVersion: 1,
+            clientUpdatedAt: new Date().toISOString()
+        };
+    }
+
+    function scheduleCloudSync() {
+        if (!getCloudToken() || cloudSyncPaused) return;
+        clearTimeout(cloudSyncTimer);
+        updateCloudStatus("Saving changes…", "pending");
+        cloudSyncTimer = setTimeout(() => {
+            cloudSyncChain = cloudSyncChain
+                .then(() => pushCloudData())
+                .catch(error => {
+                    console.error("Cloud sync failed:", error);
+                    updateCloudStatus("Sync error", "error");
+                });
+        }, 900);
+    }
+
+    async function pushCloudData() {
+        if (!getCloudToken() || cloudSyncPaused) return;
+        const envelope = getCloudEnvelope();
+        const result = await cloudRequest("/api/data", {
+            method: "PUT",
+            body: JSON.stringify({ data: envelope })
+        });
+        cloudLastUpdatedAt = result.updatedAt || new Date().toISOString();
+        updateCloudStatus("Synced", "success");
+    }
+
+    function applyCloudEnvelope(envelope) {
+        if (!envelope || typeof envelope !== "object") return false;
+        const incoming = envelope.state || envelope;
+        if (!incoming || typeof incoming !== "object" || !incoming.checklists || !incoming.settings || !incoming.records) {
+            throw new Error("The cloud data format is not recognized. Your local data has not been replaced.");
+        }
+
+        cloudSyncPaused = true;
+        try {
+            state = normalizeState(incoming);
+            localStorage.setItem(APP_KEY, JSON.stringify(state));
+
+            if (Array.isArray(envelope.nurseNotes)) {
+                localStorage.setItem("discipline-hq-nurse-notes-v1", JSON.stringify(envelope.nurseNotes.slice(-100)));
+            }
+            if (envelope.theme === "light" || envelope.theme === "dark") {
+                localStorage.setItem(THEME_KEY, envelope.theme);
+                document.body.classList.toggle("light-theme", envelope.theme === "light");
+            }
+        } finally {
+            cloudSyncPaused = false;
+        }
+
+        loadSettingsForm();
+        applyAppearancePreferences();
+        renderNurseHistory();
+        renderDailySession();
+        renderDashboard();
+        renderHistory();
+        renderAnalytics();
+        renderReflections();
+        renderChecklistEditor();
+        renderCalendar();
+        return true;
+    }
+
+    function updateCloudStatus(text, mode = "") {
+        const status = document.getElementById("cloud-status-text");
+        const dot = document.getElementById("cloud-status-dot");
+        const account = document.getElementById("cloud-account-button");
+        if (status) status.textContent = text;
+        if (dot) {
+            dot.style.background = mode === "error" ? "#ff8585" :
+                mode === "pending" ? "#f2c879" :
+                mode === "success" ? "#74e5a0" : "#87938a";
+        }
+        if (account) {
+            account.textContent = getCloudToken()
+                ? (getCloudEmail() ? getCloudEmail() : "Cloud account")
+                : "Connect cloud";
+            account.title = getCloudToken() ? "Cloud account and sync" : "Connect this app to cloud sync";
+        }
+    }
+
+    function ensureCloudInterface() {
+        if (cloudUiReady) return;
+        cloudUiReady = true;
+
+        const style = document.createElement("style");
+        style.textContent = `
+          .cloud-account-wrap{display:flex;align-items:center;gap:8px;min-width:0}
+          #cloud-account-button{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:36px;padding:7px 11px;border:1px solid var(--border-strong,#344238);border-radius:10px;background:var(--surface,#101613);color:var(--text,#f0f5f1);font-size:11px;cursor:pointer}
+          #cloud-account-button:hover{border-color:var(--accent,#74e5a0);color:var(--accent,#74e5a0)}
+          .cloud-sync-dot{width:7px;height:7px;border-radius:50%;background:#87938a;flex:0 0 auto}
+          #cloud-status-text{font-size:10px;color:var(--text-secondary,#a0afa4);white-space:nowrap}
+          .cloud-modal-backdrop{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:18px}
+          .cloud-modal{width:min(470px,100%);background:#0d1511;color:#f0f5f1;border:1px solid #344238;border-radius:18px;padding:24px;box-shadow:0 24px 90px #000a}
+          .cloud-modal h2{margin:0 0 8px;font-size:22px}.cloud-modal p{color:#a0afa4;font-size:13px;line-height:1.6}
+          .cloud-modal label{display:block;margin:12px 0 5px;font-size:12px;color:#cbd7ce}
+          .cloud-modal input{width:100%;padding:12px;border:1px solid #344238;border-radius:9px;background:#090c0b;color:#f0f5f1}
+          .cloud-modal-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+          .cloud-modal button{padding:10px 14px;border-radius:9px;border:1px solid #344238;background:#141c17;color:#f0f5f1;cursor:pointer}
+          .cloud-modal button.primary{background:#74e5a0;color:#07130b;border-color:#74e5a0;font-weight:700}
+          .cloud-modal button:disabled{opacity:.55;cursor:wait}.cloud-modal .cloud-error{color:#ff8585;min-height:18px;font-size:12px;margin-top:8px}
+          .cloud-modal .cloud-switch{background:transparent;border:0;color:#74e5a0;padding-left:0}
+          @media(max-width:650px){#cloud-status-text{display:none}#cloud-account-button{max-width:120px}.cloud-modal{padding:18px}}
+        `;
+        document.head.appendChild(style);
+
+        const topbar = document.querySelector(".topbar-right");
+        if (topbar) {
+            const wrap = document.createElement("div");
+            wrap.className = "cloud-account-wrap";
+            wrap.innerHTML = `<span class="cloud-sync-dot" id="cloud-status-dot"></span><span id="cloud-status-text">Local only</span><button id="cloud-account-button" type="button">Connect cloud</button>`;
+            topbar.insertBefore(wrap, topbar.firstChild);
+        }
+
+        const backdrop = document.createElement("div");
+        backdrop.className = "cloud-modal-backdrop";
+        backdrop.id = "cloud-modal-backdrop";
+        backdrop.hidden = true;
+        backdrop.innerHTML = `
+          <section class="cloud-modal" role="dialog" aria-modal="true" aria-labelledby="cloud-modal-title">
+            <div class="eyebrow">DISCIPLINE HQ CLOUD</div>
+            <h2 id="cloud-modal-title">Sync across your devices</h2>
+            <p>Your checklists, daily sessions, reflections, settings, and coaching notes can be shared between your laptop and phone after you sign in to the same account.</p>
+            <form id="cloud-auth-form">
+              <label for="cloud-email">Email</label>
+              <input id="cloud-email" type="email" autocomplete="email" required maxlength="200">
+              <label for="cloud-password">Password</label>
+              <input id="cloud-password" type="password" autocomplete="current-password" required minlength="12" maxlength="200" placeholder="At least 12 characters">
+              <div id="cloud-auth-error" class="cloud-error" role="status"></div>
+              <div class="cloud-modal-actions">
+                <button class="primary" id="cloud-submit-button" type="submit">Sign in</button>
+                <button type="button" id="cloud-cancel-button">Not now</button>
+              </div>
+              <button type="button" id="cloud-mode-switch" class="cloud-switch">Need an account? Create one</button>
+            </form>
+            <div id="cloud-merge-actions" hidden>
+              <p id="cloud-merge-message"></p>
+              <div class="cloud-modal-actions">
+                <button class="primary" id="cloud-load-remote" type="button">Load cloud data</button>
+                <button id="cloud-upload-local" type="button">Replace cloud with this device's data</button>
+              </div>
+              <div class="cloud-modal-actions"><button id="cloud-merge-cancel" type="button">Cancel</button></div>
+            </div>
+          </section>`;
+        document.body.appendChild(backdrop);
+
+        let authMode = "login";
+        let pendingCloudEnvelope = null;
+        const form = document.getElementById("cloud-auth-form");
+        const emailInput = document.getElementById("cloud-email");
+        const passwordInput = document.getElementById("cloud-password");
+        const submitButton = document.getElementById("cloud-submit-button");
+        const authError = document.getElementById("cloud-auth-error");
+        const switchButton = document.getElementById("cloud-mode-switch");
+        const mergeActions = document.getElementById("cloud-merge-actions");
+
+        function showCloudModal() {
+            backdrop.hidden = false;
+            form.hidden = false;
+            mergeActions.hidden = true;
+            authError.textContent = "";
+            if (getCloudToken()) {
+                document.getElementById("cloud-modal-title").textContent = "Cloud account connected";
+                form.hidden = true;
+                mergeActions.hidden = false;
+                document.getElementById("cloud-merge-message").textContent =
+                    `Signed in as ${getCloudEmail()}. You can refresh from the cloud or upload this device's current data.`;
+                document.getElementById("cloud-load-remote").textContent = "Refresh from cloud";
+                document.getElementById("cloud-upload-local").textContent = "Upload this device's data";
+                pendingCloudEnvelope = null;
+            } else {
+                document.getElementById("cloud-modal-title").textContent = "Sync across your devices";
+                submitButton.textContent = authMode === "login" ? "Sign in" : "Create account";
+                passwordInput.autocomplete = authMode === "login" ? "current-password" : "new-password";
+                switchButton.textContent = authMode === "login" ? "Need an account? Create one" : "Already have an account? Sign in";
+            }
+        }
+
+        document.getElementById("cloud-account-button")?.addEventListener("click", showCloudModal);
+        document.getElementById("cloud-cancel-button").addEventListener("click", () => { backdrop.hidden = true; });
+        document.getElementById("cloud-merge-cancel").addEventListener("click", () => { backdrop.hidden = true; });
+        document.getElementById("cloud-logout-button").addEventListener("click", async () => {
+            await logoutCloud();
+            backdrop.hidden = true;
+        });
+        backdrop.addEventListener("click", event => { if (event.target === backdrop) backdrop.hidden = true; });
+
+        switchButton.addEventListener("click", () => {
+            authMode = authMode === "login" ? "register" : "login";
+            submitButton.textContent = authMode === "login" ? "Sign in" : "Create account";
+            passwordInput.autocomplete = authMode === "login" ? "current-password" : "new-password";
+            switchButton.textContent = authMode === "login" ? "Need an account? Create one" : "Already have an account? Sign in";
+            authError.textContent = authMode === "register"
+                ? "Use a strong password with at least 12 characters."
+                : "";
+        });
+
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+            authError.textContent = "";
+            submitButton.disabled = true;
+            submitButton.textContent = authMode === "login" ? "Signing in…" : "Creating account…";
+            try {
+                const result = await cloudRequest(authMode === "login" ? "/api/login" : "/api/register", {
+                    method: "POST",
+                    headers: {},
+                    body: JSON.stringify({ email: emailInput.value.trim(), password: passwordInput.value })
+                });
+                localStorage.setItem(CLOUD_TOKEN_KEY, result.token);
+                localStorage.setItem(CLOUD_EMAIL_KEY, result.user.email);
+                updateCloudStatus("Checking cloud…", "pending");
+
+                const remote = await cloudRequest("/api/data", { method: "GET" });
+                backdrop.hidden = true;
+                if (remote.data && (remote.data.state || remote.data.checklists)) {
+                    pendingCloudEnvelope = remote.data;
+                    cloudLastUpdatedAt = remote.updatedAt || null;
+                    backdrop.hidden = false;
+                    document.getElementById("cloud-modal-title").textContent = "Choose which data to keep";
+                    form.hidden = true;
+                    mergeActions.hidden = false;
+                    document.getElementById("cloud-merge-message").textContent =
+                        "This account already has cloud data. Load it onto this device, or deliberately replace the cloud copy with this device's current local data.";
+                    document.getElementById("cloud-load-remote").textContent = "Load cloud data on this device";
+                    document.getElementById("cloud-upload-local").textContent = "Replace cloud with this device's data";
+                    updateCloudStatus("Choose sync direction", "pending");
+                } else {
+                    await pushCloudData();
+                    backdrop.hidden = true;
+                    startCloudPolling();
+                    showToast("Cloud account connected. This device's existing data was uploaded.");
+                }
+                updateCloudStatus("Connected", "success");
+            } catch (error) {
+                authError.textContent = error.message || "Could not connect to cloud.";
+                backdrop.hidden = false;
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = authMode === "login" ? "Sign in" : "Create account";
+            }
+        });
+
+        document.getElementById("cloud-load-remote").addEventListener("click", async () => {
+            try {
+                let envelope = pendingCloudEnvelope;
+                if (!envelope) {
+                    const remote = await cloudRequest("/api/data", { method: "GET" });
+                    envelope = remote.data;
+                }
+                if (!envelope) throw new Error("No cloud data exists for this account yet.");
+                applyCloudEnvelope(envelope);
+                const remote = await cloudRequest("/api/data", { method: "GET" });
+                cloudLastUpdatedAt = remote.updatedAt || null;
+                backdrop.hidden = true;
+                startCloudPolling();
+                updateCloudStatus("Synced", "success");
+                showToast("Cloud data loaded on this device.");
+            } catch (error) {
+                document.getElementById("cloud-auth-error").textContent = error.message;
+                form.hidden = true;
+                mergeActions.hidden = false;
+                backdrop.hidden = false;
+            }
+        });
+
+        document.getElementById("cloud-upload-local").addEventListener("click", async () => {
+            if (!window.confirm("This will replace the cloud copy for this account with this device's current app data. Continue only if this is the data you want to keep.")) return;
+            try {
+                await pushCloudData();
+                const remote = await cloudRequest("/api/data", { method: "GET" });
+                cloudLastUpdatedAt = remote.updatedAt || null;
+                backdrop.hidden = true;
+                startCloudPolling();
+                updateCloudStatus("Synced", "success");
+                showToast("This device's data has been uploaded to the cloud.");
+            } catch (error) {
+                document.getElementById("cloud-auth-error").textContent = error.message;
+            }
+        });
+
+        // Existing sessions can be logged out without deleting the local copy.
+        if (getCloudToken()) {
+            updateCloudStatus("Connected", "success");
+            startCloudPolling();
+        } else {
+            updateCloudStatus("Local only");
+        }
+    }
+
+    async function logoutCloud() {
+        const token = getCloudToken();
+        try {
+            if (token) await cloudRequest("/api/logout", { method: "POST" });
+        } catch (error) {
+            console.warn("Cloud logout request failed:", error);
+        }
+        localStorage.removeItem(CLOUD_TOKEN_KEY);
+        localStorage.removeItem(CLOUD_EMAIL_KEY);
+        if (cloudPollingTimer) clearInterval(cloudPollingTimer);
+        updateCloudStatus("Local only");
+        showToast("Signed out of cloud. Local data remains on this device.");
+    }
+
+    function startCloudPolling() {
+        if (cloudPollingTimer) clearInterval(cloudPollingTimer);
+        cloudPollingTimer = setInterval(async () => {
+            if (!getCloudToken() || cloudSyncPaused || document.hidden) return;
+            try {
+                const remote = await cloudRequest("/api/data", { method: "GET" });
+                if (!remote.data) return;
+                const stamp = remote.updatedAt || remote.data.clientUpdatedAt || null;
+                if (!cloudLastUpdatedAt) {
+                    cloudLastUpdatedAt = stamp;
+                    return;
+                }
+                if (stamp && stamp > cloudLastUpdatedAt) {
+                    const hasUnsaved = document.getElementById("daily-save-status")?.textContent?.toLowerCase().includes("unsaved")
+                        || document.getElementById("reflection-save-status")?.textContent?.toLowerCase().includes("unsaved");
+                    if (hasUnsaved) {
+                        updateCloudStatus("Other device changed data", "pending");
+                        return;
+                    }
+                    applyCloudEnvelope(remote.data);
+                    cloudLastUpdatedAt = stamp;
+                    updateCloudStatus("Updated from cloud", "success");
+                }
+            } catch (error) {
+                console.warn("Cloud polling failed:", error);
+                if (error.message && error.message.includes("sign in")) updateCloudStatus("Sign in required", "error");
+            }
+        }, 12000);
+    }
+
+
     /* ========================================================
        INITIALIZATION
        ======================================================== */
@@ -2360,6 +2761,7 @@
         state = loadState();
 
         bindEvents();
+        ensureCloudInterface();
 
         document.getElementById("session-date").value = todayKey();
 
@@ -2376,6 +2778,9 @@
 
         selectStage(selectedStage);
 
+        if (!getCloudToken()) {
+            setTimeout(() => showToast("Local mode: select Connect cloud to sync this app across devices.", "info"), 900);
+        }
         console.info("Discipline HQ frontend initialized.");
     }
 
@@ -2386,6 +2791,8 @@
     } else {
         initialize();
     }
+
+    window.disciplineHQScheduleCloudSync = () => scheduleCloudSync();
 
 })();
 
@@ -2400,6 +2807,7 @@
     themeButton.addEventListener("click", () => {
       document.body.classList.toggle("light-theme");
       localStorage.setItem("discipline-hq-theme", document.body.classList.contains("light-theme") ? "light" : "dark");
+      if (typeof window.disciplineHQScheduleCloudSync === "function") window.disciplineHQScheduleCloudSync();
     });
   }
   if (search) {
