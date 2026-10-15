@@ -279,37 +279,28 @@
         return Math.min(max, Math.max(min, value));
     }
 
+    function createEmptyRecord(key) {
+        return {
+            date: key,
+            checklistVersion: 1,
+            checklistSnapshot: structuredClone(state.checklists),
+            answers: { premarket: {}, intramarket: {}, postmarket: {} },
+            notApplicable: { premarket: false, intramarket: false, postmarket: false },
+            sessionStatus: "not-started",
+            compliance: "unreviewed",
+            violationNotes: "",
+            reflections: { wins: "", mistakes: "", lessons: "", tomorrow: "" },
+            updatedAt: null
+        };
+    }
+
     function ensureRecord(key) {
         if (!parseDateKey(key)) {
             throw new Error("Invalid session date.");
         }
 
         if (!state.records[key]) {
-            state.records[key] = {
-                date: key,
-                checklistVersion: 1,
-                checklistSnapshot: structuredClone(state.checklists),
-                answers: {
-                    premarket: {},
-                    intramarket: {},
-                    postmarket: {}
-                },
-                notApplicable: {
-                    premarket: false,
-                    intramarket: false,
-                    postmarket: false
-                },
-                sessionStatus: "not-started",
-                compliance: "unreviewed",
-                violationNotes: "",
-                reflections: {
-                    wins: "",
-                    mistakes: "",
-                    lessons: "",
-                    tomorrow: ""
-                },
-                updatedAt: null
-            };
+            state.records[key] = createEmptyRecord(key);
         }
 
         const record = state.records[key];
@@ -475,6 +466,7 @@
         analytics: "Analytics",
         reflections: "Reflections",
         checklists: "Checklist editor",
+        nurse: "AI Discipline Nurse",
         settings: "Settings"
     };
 
@@ -522,6 +514,8 @@
             renderChecklistEditor();
         } else if (viewName === "dashboard") {
             renderDashboard();
+        } else if (viewName === "nurse") {
+            renderNurseHistory();
         }
     }
 
@@ -586,7 +580,8 @@
             dateInput.value = todayKey();
         }
 
-        const record = getCurrentRecord();
+        const selectedKey = dateInput.value;
+        const record = state.records[selectedKey] || createEmptyRecord(selectedKey);
 
         document.getElementById("compliance-review").value =
             record.compliance;
@@ -742,12 +737,14 @@
         const element = document.getElementById("daily-save-status");
 
         if (element) {
-            element.textContent = record.updatedAt
-                ? `Last saved ${formatDate(new Date(record.updatedAt), {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                })}`
-                : "Not saved yet";
+            element.textContent = !state.records[record.date]
+                ? "No saved session for this date"
+                : record.updatedAt
+                    ? `Last saved ${formatDate(new Date(record.updatedAt), {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                    })}`
+                    : "Not saved yet";
         }
     }
 
@@ -781,6 +778,10 @@
 
         renderDailySession();
         renderDashboard();
+        renderHistory();
+        renderAnalytics();
+        renderReflections();
+        renderCalendar();
         showToast("Daily session saved.");
     }
 
@@ -1310,7 +1311,6 @@
 
         document.getElementById("session-date").value = key;
 
-        ensureRecord(key);
         renderDailySession();
         renderCalendar();
         showView("daily");
@@ -2002,6 +2002,9 @@
         delete state.reflections[key];
         if (!saveState()) return;
 
+        if ((document.getElementById("session-date")?.value || "") === key) {
+            renderDailySession();
+        }
         renderDashboard();
         renderHistory();
         renderAnalytics();
@@ -2216,7 +2219,6 @@
                     showToast("Please select a valid date.", "error");
                 }
 
-                ensureRecord(input.value);
                 renderDailySession();
                 renderCalendar();
                 renderDashboard();
@@ -2224,6 +2226,12 @@
 
         document.getElementById("save-daily-session")
             .addEventListener("click", saveDailySession);
+
+        document.getElementById("delete-daily-session")
+            ?.addEventListener("click", () => {
+                const key = document.getElementById("session-date")?.value || todayKey();
+                deleteSessionRecord(key);
+            });
 
         document.querySelectorAll(".checklist-items").forEach(container => {
             container.addEventListener("change", handleChecklistChange);
@@ -2358,8 +2366,6 @@
         loadSettingsForm();
         applyAppearancePreferences();
         renderNurseHistory();
-
-        ensureRecord(todayKey());
 
         renderDailySession();
         renderDashboard();
