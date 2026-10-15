@@ -652,7 +652,14 @@
 
         const orderedItems = [...applicableItems, ...optionalItems];
 
-        container.innerHTML = orderedItems.map(item => {
+        const noTradeControl = (stage === "intramarket" || stage === "postmarket") ? `
+            <div class="no-trade-control">
+                <div><strong>${stage === "intramarket" ? "No trade today" : "No-trade day review"}</strong>
+                <p>${notApplicable ? "This section is excluded from today's discipline score." : "If you did not take a trade, mark this section not applicable."}</p></div>
+                <button type="button" class="no-trade-button ${notApplicable ? "is-active" : ""}" data-no-trade="${stage}" aria-pressed="${notApplicable ? "true" : "false"}">${notApplicable ? "✓ No-trade day selected · Undo" : "Mark as No Trade"}</button>
+            </div>` : "";
+
+        container.innerHTML = noTradeControl + orderedItems.map(item => {
             const checked = record.answers[stage]?.[item.id] === true;
 
             return `
@@ -2247,6 +2254,24 @@
 
         document.querySelectorAll(".checklist-items").forEach(container => {
             container.addEventListener("change", handleChecklistChange);
+            container.addEventListener("click", event => {
+                const button = event.target.closest("button[data-no-trade]");
+                if (!button) return;
+                const stage = button.dataset.noTrade;
+                if (stage !== "intramarket" && stage !== "postmarket") return;
+                const record = getCurrentRecord();
+                record.notApplicable[stage] = !record.notApplicable[stage];
+                record.updatedAt = new Date().toISOString();
+                saveState();
+                renderDailySession();
+                renderDashboard();
+                renderHistory();
+                renderAnalytics();
+                renderCalendar();
+                showToast(record.notApplicable[stage]
+                    ? `${STAGES[stage].label} marked as no trade and excluded from today's score.`
+                    : `${STAGES[stage].label} re-enabled for scoring.`);
+            });
         });
 
         document.getElementById("save-reflection-button")
@@ -2520,7 +2545,11 @@
           .cloud-modal button{padding:10px 14px;border-radius:9px;border:1px solid #344238;background:#141c17;color:#f0f5f1;cursor:pointer}
           .cloud-modal button.primary{background:#74e5a0;color:#07130b;border-color:#74e5a0;font-weight:700}
           .cloud-modal button:disabled{opacity:.55;cursor:wait}.cloud-modal .cloud-error{color:#ff8585;min-height:18px;font-size:12px;margin-top:8px}
-          .cloud-modal .cloud-switch{background:transparent;border:0;color:#74e5a0;padding-left:0}
+          .cloud-modal .cloud-switch{background:transparent;border:0;color:#74e5a0;padding-left:0;display:inline-block;margin-top:8px;text-align:left}
+          .no-trade-control{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 14px;margin:0 0 12px;border:1px solid rgba(116,229,160,.35);border-radius:11px;background:rgba(116,229,160,.07)}
+          .no-trade-control p{margin:3px 0 0;font-size:11px;color:var(--text-secondary,#a0afa4)}
+          .no-trade-button{border:1px solid var(--accent-border,rgba(116,229,160,.3));border-radius:9px;padding:9px 12px;background:rgba(116,229,160,.12);color:var(--accent,#74e5a0);font-weight:700;cursor:pointer;white-space:nowrap}
+          .no-trade-button.is-active{background:#74e5a0;color:#07130b}
           @media(max-width:650px){#cloud-status-text{display:none}#cloud-account-button{max-width:120px}.cloud-modal{padding:18px}}
         `;
         document.head.appendChild(style);
@@ -2606,19 +2635,26 @@
         });
         backdrop.addEventListener("click", event => { if (event.target === backdrop) backdrop.hidden = true; });
 
-        switchButton.addEventListener("click", () => {
+        switchButton.addEventListener("click", event => {
+            event.preventDefault();
             authMode = authMode === "login" ? "register" : "login";
+            document.getElementById("cloud-modal-title").textContent = authMode === "register"
+                ? "Create your cloud account"
+                : "Sync across your devices";
             submitButton.textContent = authMode === "login" ? "Sign in" : "Create account";
             passwordInput.autocomplete = authMode === "login" ? "current-password" : "new-password";
+            passwordInput.placeholder = authMode === "login" ? "Enter your password" : "Create a password (12+ characters)";
             switchButton.textContent = authMode === "login" ? "Need an account? Create one" : "Already have an account? Sign in";
             authError.textContent = authMode === "register"
-                ? "Use a strong password with at least 12 characters."
-                : "";
+                ? "Registration mode: enter a new password of at least 12 characters, then press Create account."
+                : "Sign-in mode: enter the password you used when creating this account.";
+            authError.style.color = "#74e5a0";
         });
 
         form.addEventListener("submit", async event => {
             event.preventDefault();
             authError.textContent = "";
+            authError.style.color = "#ff8585";
             submitButton.disabled = true;
             submitButton.textContent = authMode === "login" ? "Signing in…" : "Creating account…";
             try {
