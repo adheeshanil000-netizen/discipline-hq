@@ -2629,7 +2629,7 @@
         document.getElementById("cloud-account-button")?.addEventListener("click", showCloudModal);
         document.getElementById("cloud-cancel-button").addEventListener("click", () => { backdrop.hidden = true; });
         document.getElementById("cloud-merge-cancel").addEventListener("click", () => { backdrop.hidden = true; });
-        document.getElementById("cloud-logout-button").addEventListener("click", async () => {
+        document.getElementById("cloud-logout-button")?.addEventListener("click", async () => {
             await logoutCloud();
             backdrop.hidden = true;
         });
