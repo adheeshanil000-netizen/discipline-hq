@@ -3515,3 +3515,25 @@ html[data-font-size="large"] .nav-item { font-size: 1.06em; }
 .nurse-note-card strong { font-size:11px; color:#68e7b8; }
 .nurse-note-card p { margin-bottom:0; white-space:pre-wrap; overflow-wrap:anywhere; }
 @media(max-width:650px) { .settings-control-pair { display:grid; grid-template-columns:1fr; } .history-delete-button { margin:5px 0 0 0; display:block; } }
+
+
+/* Session controls: save and delete are both visible and distinct. */
+.session-action-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.danger-button {
+    border-color: rgba(255, 105, 105, 0.42);
+    color: #ffaaaa;
+}
+.danger-button:hover {
+    border-color: rgba(255, 105, 105, 0.8);
+    background: rgba(255, 75, 75, 0.10);
+}
+@media (max-width: 650px) {
+    .session-action-buttons { width: 100%; }
+    .session-action-buttons > button { flex: 1 1 100%; }
+}
