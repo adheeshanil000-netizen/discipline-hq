@@ -22,6 +22,7 @@
     let cloudSyncPaused = false;
     let cloudPollingTimer = null;
     let cloudPollInFlight = false;
+    let cloudLastContentSignature = null;
     let cloudUiReady = false;
 
     const STAGES = {
@@ -2476,6 +2477,19 @@
         };
     }
 
+    function cloudContentSignature(envelope) {
+        if (!envelope || typeof envelope !== "object") return "";
+        const incomingState = envelope.state || envelope;
+        // Exclude clientUpdatedAt and server timestamps: device clocks and D1
+        // timestamp precision differ. Compare the actual synced content instead.
+        return JSON.stringify({
+            state: incomingState,
+            nurseNotes: Array.isArray(envelope.nurseNotes) ? envelope.nurseNotes : [],
+            theme: envelope.theme === "light" ? "light" : "dark",
+            schemaVersion: envelope.schemaVersion || 1
+        });
+    }
+
     function scheduleCloudSync() {
         if (!getCloudToken() || cloudSyncPaused) return;
         clearTimeout(cloudSyncTimer);
@@ -2499,6 +2513,7 @@
         });
         cloudLastUpdatedAt = result.updatedAt || new Date().toISOString();
         cloudLastVersion = Math.max(cloudTimestampValue(cloudLastUpdatedAt), cloudTimestampValue(envelope.clientUpdatedAt));
+        cloudLastContentSignature = cloudContentSignature(envelope);
         updateCloudStatus("Synced", "success");
     }
 
@@ -2525,6 +2540,7 @@
             cloudSyncPaused = false;
         }
 
+        cloudLastContentSignature = cloudContentSignature(envelope);
         loadSettingsForm();
         applyAppearancePreferences();
         renderNurseHistory();
@@ -2704,6 +2720,7 @@
                     pendingCloudEnvelope = remote.data;
                     cloudLastUpdatedAt = remote.updatedAt || null;
                     cloudLastVersion = Math.max(cloudTimestampValue(remote.updatedAt), cloudTimestampValue(remote.data?.clientUpdatedAt));
+                    cloudLastContentSignature = cloudContentSignature(remote.data);
                     backdrop.hidden = false;
                     document.getElementById("cloud-modal-title").textContent = "Choose which data to keep";
                     form.hidden = true;
@@ -2741,6 +2758,7 @@
                 const remote = await cloudRequest("/api/data", { method: "GET" });
                 cloudLastUpdatedAt = remote.updatedAt || null;
                 cloudLastVersion = Math.max(cloudTimestampValue(remote.updatedAt), cloudTimestampValue(remote.data?.clientUpdatedAt));
+                cloudLastContentSignature = cloudContentSignature(remote.data);
                 backdrop.hidden = true;
                 startCloudPolling();
                 updateCloudStatus("Synced", "success");
@@ -2760,6 +2778,7 @@
                 const remote = await cloudRequest("/api/data", { method: "GET" });
                 cloudLastUpdatedAt = remote.updatedAt || null;
                 cloudLastVersion = Math.max(cloudTimestampValue(remote.updatedAt), cloudTimestampValue(remote.data?.clientUpdatedAt));
+                cloudLastContentSignature = cloudContentSignature(remote.data);
                 backdrop.hidden = true;
                 startCloudPolling();
                 updateCloudStatus("Synced", "success");
@@ -2771,6 +2790,7 @@
 
         // Existing sessions can be logged out without deleting the local copy.
         if (getCloudToken()) {
+            cloudLastContentSignature = cloudContentSignature(getCloudEnvelope());
             updateCloudStatus("Connected", "success");
             startCloudPolling();
         } else {
@@ -2797,7 +2817,7 @@
         // D1 CURRENT_TIMESTAMP is "YYYY-MM-DD HH:MM:SS" while the Worker
         // response can be ISO-8601. Compare parsed times, not raw strings.
         const text = String(value);
-        const normalized = /^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(text)
+        const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text)
             ? `${text.replace(" ", "T")}Z`
             : text;
         const valueMs = Date.parse(normalized);
@@ -2811,30 +2831,40 @@
             const remote = await cloudRequest("/api/data", { method: "GET" });
             if (!remote.data) return;
 
-            const stamp = remote.updatedAt || remote.data.clientUpdatedAt || null;
-            const incomingVersion = Math.max(
-                cloudTimestampValue(remote.updatedAt),
-                cloudTimestampValue(remote.data.clientUpdatedAt)
-            );
+            const remoteSignature = cloudContentSignature(remote.data);
+            const localSignature = cloudContentSignature(getCloudEnvelope());
 
-            if (!cloudLastUpdatedAt && !cloudLastVersion) {
-                cloudLastUpdatedAt = stamp;
-                cloudLastVersion = incomingVersion;
-                return;
-            }
+            // If this device has a local save waiting to upload, don't replace it
+            // with a cloud copy mid-save.
+            if (cloudSyncTimer) return;
 
-            if (stamp && incomingVersion > cloudLastVersion) {
+            if (remoteSignature !== localSignature) {
                 const hasUnsaved = document.getElementById("daily-save-status")?.textContent?.toLowerCase().includes("unsaved")
                     || document.getElementById("reflection-save-status")?.textContent?.toLowerCase().includes("unsaved");
+
                 if (hasUnsaved) {
                     updateCloudStatus("Other device changed data", "pending");
                     return;
                 }
 
+                // Content comparison is authoritative here. Timestamp-only checks
+                // can miss changes when the two devices' clocks differ.
                 applyCloudEnvelope(remote.data);
-                cloudLastUpdatedAt = stamp;
-                cloudLastVersion = incomingVersion;
+                cloudLastUpdatedAt = remote.updatedAt || null;
+                cloudLastVersion = Math.max(
+                    cloudTimestampValue(remote.updatedAt),
+                    cloudTimestampValue(remote.data?.clientUpdatedAt)
+                );
+                cloudLastContentSignature = remoteSignature;
                 updateCloudStatus("Updated from cloud", "success");
+            } else {
+                cloudLastContentSignature = remoteSignature;
+                cloudLastUpdatedAt = remote.updatedAt || cloudLastUpdatedAt;
+                cloudLastVersion = Math.max(
+                    cloudLastVersion,
+                    cloudTimestampValue(remote.updatedAt),
+                    cloudTimestampValue(remote.data?.clientUpdatedAt)
+                );
             }
         } catch (error) {
             console.warn("Cloud polling failed:", error);
@@ -2873,6 +2903,7 @@
 
         document.getElementById("session-date").value = todayKey();
 
+        cloudLastContentSignature = cloudContentSignature(envelope);
         loadSettingsForm();
         applyAppearancePreferences();
         renderNurseHistory();
