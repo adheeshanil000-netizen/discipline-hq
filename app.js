@@ -2922,7 +2922,9 @@
 
         document.getElementById("session-date").value = todayKey();
 
-        cloudLastContentSignature = cloudContentSignature(envelope);
+        // Initialize the sync signature from the current local data envelope.
+        // `envelope` is not defined in this scope; build it before hashing.
+        cloudLastContentSignature = cloudContentSignature(getCloudEnvelope());
         loadSettingsForm();
         applyAppearancePreferences();
         renderNurseHistory();
