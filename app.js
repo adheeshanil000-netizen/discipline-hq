@@ -2103,28 +2103,47 @@
         showToast("Coaching note saved.");
     }
 
-    function reviewNurseNote() {
+    async function reviewNurseNote() {
         const text = document.getElementById("nurse-entry")?.value.trim() || "";
         const output = document.getElementById("nurse-response");
-        if (!text) {
-            showToast("Describe a session or mistake first.", "error");
+        if (!text) { showToast("Describe a session or mistake first.", "error"); return; }
+        if (!getCloudToken()) {
+            showToast("Sign in to your Discipline HQ account before using AI coaching.", "error");
             return;
         }
-        const lower = text.toLowerCase();
-        const points = [];
-        if (/revenge|win it back|recover loss/.test(lower)) points.push("Potential pattern: revenge trading. Consider a mandatory pause after a loss and stop if your written daily limit is reached.");
-        if (/early|before confirmation|fomo|miss the move|chase/.test(lower)) points.push("Potential pattern: fear of missing out or premature entry. Require every predefined confirmation before entry.");
-        if (/stop.?loss|moved my stop|widened/.test(lower)) points.push("Potential risk-control issue: define invalidation before entry and do not widen a stop to avoid a planned loss.");
-        if (/oversiz|lot size|risk too much|risk limit/.test(lower)) points.push("Potential position-sizing issue: calculate risk from the stop distance before entering and respect the written risk cap.");
-        if (!points.length) points.push("Separate the facts from the emotion: what was your plan, what did you actually do, which rule applied, and what single action will prevent a repeat?");
+        const button = document.getElementById("nurse-review-button");
+        if (button) { button.disabled = true; button.textContent = "Reviewing…"; }
         output.replaceChildren();
-        const heading = document.createElement("h2");
-        heading.textContent = "Structured review (preview)";
-        const paragraph = document.createElement("p");
-        paragraph.textContent = "This is a rule-based preview, not AI analysis. " + points.join(" ");
-        const next = document.createElement("p");
-        next.textContent = "Next step: write one specific rule for your next session and check whether you followed it in your post-market review.";
-        output.append(heading, paragraph, next);
+        const status = document.createElement("p");
+        status.textContent = "AI Discipline Nurse is reviewing your note…";
+        output.appendChild(status);
+        try {
+            const records = state?.records || {};
+            const recent = Object.entries(records).sort((a,b) => String(b[0]).localeCompare(String(a[0]))).slice(0, 10);
+            const journalSummary = recent.map(([date, record]) => `${date}: ${JSON.stringify(record).slice(0, 900)}`).join("\n").slice(0, 6500);
+            const result = await cloudRequest("/api/nurse-review", {
+                method: "POST",
+                body: JSON.stringify({ note: text, journalSummary })
+            });
+            const heading = document.createElement("h2");
+            heading.textContent = "AI Discipline Nurse Review";
+            const paragraph = document.createElement("p");
+            paragraph.style.whiteSpace = "pre-wrap";
+            paragraph.textContent = result.answer;
+            output.replaceChildren(heading, paragraph);
+            saveNurseNote(`Trader note: ${text}\n\nAI Discipline Nurse review:\n${result.answer}`);
+        } catch (err) {
+            output.replaceChildren();
+            const heading = document.createElement("h2");
+            heading.textContent = err?.message === "AI DAILY LIMIT REACHED" ? "AI DAILY LIMIT REACHED" : "AI review unavailable";
+            const paragraph = document.createElement("p");
+            paragraph.textContent = /AI DAILY LIMIT REACHED/i.test(err?.message || "")
+                ? "You've used today's free AI allowance. Your trading journal and saved data are safe. AI coaching will be available again after the daily allowance resets. No paid requests will be made. Please come back tomorrow to continue your AI coaching."
+                : (err?.message || "Free AI coaching is unavailable right now. No paid fallback was attempted.");
+            output.append(heading, paragraph);
+        } finally {
+            if (button) { button.disabled = false; button.textContent = "Review my session"; }
+        }
     }
 
     function bindEvents() {
